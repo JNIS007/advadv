@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('includes/config.php');
+error_reporting(E_ALL);
 if (strlen($_SESSION['login']) == 0) {
   header('location:index.php');
 } else {
@@ -224,17 +225,33 @@ if (strlen($_SESSION['login']) == 0) {
               <div class="tab-content" data-tab="BELONGS" style="display:none;">
                 <div class="card-box">
                   <h4><b>Belongs To:</b></h4>
+                   <div class="form-group mb-3">
+            <label for="destination">Destination:</label>
+            <select class="form-control" name="destination" id="destination" required>
+                <option value="">-- Select Destination --</option>
+                <?php
+                $destQuery = mysqli_query($con, "SELECT id, DestName FROM tbldest WHERE Is_Active = 1;");
+                while ($destRow = mysqli_fetch_assoc($destQuery)) {
+                    $selected = (isset($_SESSION['form_data']['destination']) && $_SESSION['form_data']['destination'] == $destRow['id']) ? 'selected' : '';
+                    echo '<option value="' . $destRow['id'] . '" ' . $selected . '>' . htmlspecialchars($destRow['DestName']) . '</option>';
+                }
+                ?>
+            </select>
+        </div>
                   <div class="form-group mb-3">
                     <label for="postTitle">Related Post:</label>
                     <select class="form-control" name="related_post_id" id="postTitle" required>
-                      <option value="">-- Select Post --</option>
-                      <?php
-                      $query = mysqli_query($con, "SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1");
-                      while ($row = mysqli_fetch_assoc($query)) {
+                     <option value="">-- Select Post --</option>
+                <?php
+                // If destination is already selected, show only posts for that destination
+                if (isset($_SESSION['form_data']['destination'])) {
+                    $query = mysqli_query($con, "SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1 AND DestID = " . intval($_SESSION['form_data']['destination']));
+                    while ($row = mysqli_fetch_assoc($query)) {
                         $selected = (isset($_SESSION['form_data']['related_post_id']) && $_SESSION['form_data']['related_post_id'] == $row['id']) ? 'selected' : '';
                         echo '<option value="' . $row['id'] . '" ' . $selected . '>' . htmlspecialchars($row['PostTitle']) . '</option>';
-                      }
-                      ?>
+                    }
+                }
+                ?>
                     </select>
                   </div>
                 </div>
@@ -410,6 +427,32 @@ if (strlen($_SESSION['login']) == 0) {
           });
         }
       });
+
+      // Add this to your existing script section
+document.getElementById('destination').addEventListener('change', function() {
+    const destinationId = this.value;
+    const postSelect = document.getElementById('postTitle');
+    
+    // Clear existing options except the first one
+    while (postSelect.options.length > 1) {
+        postSelect.remove(1);
+    }
+    
+    if (destinationId) {
+        // Fetch posts for the selected destination via AJAX
+        fetch('get_posts.php?destination_id=' + destinationId)
+            .then(response => response.json())
+            .then(posts => {
+                posts.forEach(post => {
+                    const option = document.createElement('option');
+                    option.value = post.id;
+                    option.textContent = post.PostTitle;
+                    postSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+});
     </script>
 
     <!-- App js -->

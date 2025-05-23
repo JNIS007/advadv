@@ -14,10 +14,10 @@ $postid=intval($_GET['pid']);
 $query=mysqli_query($con,"update tblposts set Is_Active=0 where id='$postid'");
 if($query)
 {
-$msg="Post deleted ";
+$_SESSION['msg']="Post deleted ";
 }
 else{
-$error="Something went wrong . Please try again.";    
+$_SESSION['error']="Something went wrong . Please try again.";    
 } 
 }
 ?>
@@ -105,7 +105,31 @@ $error="Something went wrong . Please try again.";
 						</div>
                         <!-- end row -->
 
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <!---Success Message--->
+                            <?php if (isset($_SESSION['msg'])) { ?>
+                            <div class="alert alert-success" role="alert">
+                                <strong>Well done!</strong>
+                                <?php echo htmlentities($_SESSION['msg']); ?>
+                            </div>
+                            <?php 
+                           unset($_SESSION['msg']);
+                        } ?>
 
+                            <!---Error Message--->
+                            <?php if (isset($_SESSION['error'])) { ?>
+                            <div class="alert alert-danger" role="alert">
+                                <strong>Oh snap!</strong>
+                                <?php echo htmlentities($_SESSION['error']); ?>
+                            </div>
+                            <?php 
+                           $_SESSION['error'];
+                        } ?>
+
+
+                        </div>
+                    </div>
 
 
                         <div class="row">

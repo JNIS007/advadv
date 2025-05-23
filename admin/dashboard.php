@@ -79,7 +79,7 @@ if (strlen($_SESSION['login']) == 0) {
                                     <h4 class="page-title">Dashboard</h4>
                                     <ol class="p-0 m-0 breadcrumb">
                                         <li>
-                                            <a href="#">AdminPannel</a>
+                                            <a href="#">Admin Panel</a>
                                         </li>
                                         <li>
                                             <a href="#">Admin</a>
@@ -117,7 +117,7 @@ if (strlen($_SESSION['login']) == 0) {
                                     <div class="card-box widget-box-one">
                                         <i class="mdi mdi-layers widget-one-icon"></i>
                                         <div class="wigdet-one-content">
-                                            <p class="m-0 text-uppercase font-600 font-secondary text-overflow" title="User This Month">Live Posts</p>
+                                            <p class="m-0 text-uppercase font-600 font-secondary text-overflow" title="User This Month">Live Package</p>
                                             <?php $query = mysqli_query($con, "select * from tblposts where Is_Active=1");
                                             $countposts = mysqli_num_rows($query);
                                             ?>
@@ -139,7 +139,7 @@ if (strlen($_SESSION['login']) == 0) {
                                     <div class="card-box widget-box-one">
                                         <i class="mdi mdi-layers widget-one-icon"></i>
                                         <div class="wigdet-one-content">
-                                            <p class="m-0 text-uppercase font-600 font-secondary text-overflow" title="User This Month">Trash Posts</p>
+                                            <p class="m-0 text-uppercase font-600 font-secondary text-overflow" title="User This Month">Trash Package</p>
                                             <?php $query = mysqli_query($con, "select * from tblposts where Is_Active=0");
                                             $countposts = mysqli_num_rows($query);
                                             ?>
