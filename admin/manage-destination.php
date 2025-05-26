@@ -144,9 +144,9 @@ while($row=mysqli_fetch_array($query))
  <tr>
 <th scope="row"><?php echo htmlentities($cnt);?></th>
 <td><?php echo htmlentities($row['DestName']);?></td>
-<td><?php echo htmlentities($row['Description']);?></td>
-<td><?php echo htmlentities($row['PostingDate']);?></td>
-<td><?php echo htmlentities($row['UpdationDate']);?></td>
+<td><?php echo $row['Description'];?></td>
+<td><?php echo $row['PostingDate'];?></td>
+<td><?php echo $row['UpdationDate'];?></td>
 <td><a href="edit-destination.php?cid=<?php echo htmlentities($row['id']);?>"><i class="fa fa-pencil" style="color: #29b6f6;"></i></a> 
 	&nbsp;<a href="manage-destination.php?rid=<?php echo htmlentities($row['id']);?>&&action=del"> <i class="fa fa-trash-o" style="color: #f05050"></i></a> </td>
 </tr>

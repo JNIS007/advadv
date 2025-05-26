@@ -16,13 +16,20 @@ if ($id == '') {
 
   if (mysqli_num_rows($result) > 0) {
 
-    $itineraryText = $roo["Detailed_Itinerary"];
-    $inputString = $roo["Useful_Information"];
-    $inc = $roo["Inc"];
-    $exe = $roo["Exc"];
-    $altitudeDataJson = $roo["chart_data"]; // Your JSON string: '[{"outline":"Day 01","height":"1350"},{"outline":"Day 04","height":"1560"}]'
-    $Important_Note = $roo["Important_Note"];
-    $Recommended_Package = $roo["Recommended_Package"];
+function cleanText($text) {
+    $patterns = [
+        "/(\r\n)+/",          
+        "/(\\\\r\\\\n)+/"     
+    ];
+    return preg_replace($patterns, '', $text);
+}
+    $itineraryText = cleanText($roo["Detailed_Itinerary"]);
+    $inputString = cleanText($roo["Useful_Information"]);
+    $inc = cleanText($roo["Inc"]);
+    $exe = cleanText($roo["Exc"]);
+    $altitudeDataJson = cleanText($roo["chart_data"]); // Your JSON string: '[{"outline":"Day 01","height":"1350"},{"outline":"Day 04","height":"1560"}]'
+    $Important_Note = cleanText($roo["Important_Note"]);
+    $Recommended_Package = cleanText($roo["Recommended_Package"]);
     // Decode the JSON data
     $altitudeData = json_decode($altitudeDataJson, true);
 
@@ -62,16 +69,30 @@ if ($id == '') {
       }
     }
 
-    $it = explode('|', $inc);
+function parsePipeSeparatedList($html) {
+  // Remove HTML tags and decode HTML entities
+  $plainText = html_entity_decode(strip_tags($html));
 
-    $exit = explode('|', $exe);
+  // Normalize line breaks and slashes
+  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse whitespace
 
-    $items = explode('|', $inputString);
+  // Split by pipe and trim each item
+  $items = array_map('trim', explode('|', $plainText));
 
-    $smtrek = explode('|', $Recommended_Package);
+  // Remove empty entries
+  return array_filter($items, fn($item) => !empty($item));
+}
+
+// Example usage:
+$it = (parsePipeSeparatedList($inc));                 // inclusions
+$exit = parsePipeSeparatedList($exe);               // exclusions
+$items = parsePipeSeparatedList($inputString);      // general items
+$smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
+
 
     // Trim whitespace from each item and create an associative array
-    $result = [];
+   $result = [];
     foreach ($items as $item) {
       $item = trim($item);
       if (!empty($item)) {
@@ -86,18 +107,28 @@ if ($id == '') {
     }
 
 
-    $tripFacts = [];
+$tripFacts = [];
 
-    // Split by pipe
-    $components = explode('|', $Important_Note);
+if (!empty($Important_Note)) {
+  // Decode HTML entities and strip tags
+  $plainText = html_entity_decode(strip_tags($Important_Note));
 
-    foreach ($components as $component) {
-      $component = trim($component);
-      if (strpos($component, ':') !== false) {
-        list($key, $value) = explode(':', $component, 2);
-        $tripFacts[trim($key)] = trim($value);
-      }
+  // Normalize line breaks and whitespace
+  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse spaces
+
+  // Split by pipe
+  $components = explode('|', $plainText);
+
+  foreach ($components as $component) {
+    $component = trim($component);
+    if (strpos($component, ':') !== false) {
+      list($key, $value) = explode(':', $component, 2);
+      $tripFacts[trim($key)] = trim($value);
     }
+  }
+}
+
 
 
 
@@ -116,46 +147,49 @@ if ($id == '') {
 
     // Parse the text into structured days
     // Parse itinerary text with pipe delimiter
-    $days = [];
-    if (!empty($itineraryText)) {
-      // Split by day delimiter (assuming each day starts with "Day XX:")
-      $dayEntries = preg_split('/(?=Day \d{2}:)/', $itineraryText, -1, PREG_SPLIT_NO_EMPTY);
+   $days = [];
 
-      foreach ($dayEntries as $dayEntry) {
-        // Split the day entry into components using pipe delimiter
-        $components = explode('|', $dayEntry);
+if (!empty($itineraryText)) {
+  // Clean HTML tags and normalize line breaks/delimiters
+  $plainText = strip_tags($itineraryText, '<strong>'); // Keep <strong> for structure
+  $plainText = preg_replace('/<strong>\|<\/strong>|<strong>\|/', '|', $plainText); // Normalize pipe inside <strong>
+  $plainText = preg_replace('/<br\s*\/?>|\r\n|\n/', '|', $plainText); // Normalize line breaks as pipe
+  $plainText = strip_tags($plainText); // Remove remaining tags
 
-        // Initialize day array
-        $day = [
-          'day' => '',
-          'title' => '',
-          'altitude' => '',
-          'meals' => '',
-          'description' => ''
-        ];
+  // Split into individual day entries using lookahead for "Day XX:"
+  $dayEntries = preg_split('/(?=Day \d{1,2}:)/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
 
-        // Process each component
-        foreach ($components as $component) {
-          $component = trim($component);
+  foreach ($dayEntries as $dayEntry) {
+    $components = explode('|', $dayEntry);
 
-          if (preg_match('/^Day (\d{2}):(.+)$/', $component, $dayMatch)) {
-            $day['day'] = trim($dayMatch[1]);
-            $day['title'] = trim($dayMatch[2]);
-          } elseif (preg_match('/^Altitude:(.+)$/', $component, $altMatch)) {
-            $day['altitude'] = trim($altMatch[1]);
-          } elseif (preg_match('/^Meals:(.+)$/', $component, $mealsMatch)) {
-            $day['meals'] = trim($mealsMatch[1]);
-          } elseif (preg_match('/^Description:(.+)$/', $component, $descMatch)) {
-            $day['description'] = trim($descMatch[1]);
-          }
-        }
+    $day = [
+      'day' => '',
+      'title' => '',
+      'altitude' => '',
+      'meals' => '',
+      'description' => ''
+    ];
 
-        // Only add if we have at least a day number and title
-        if (!empty($day['day']) && !empty($day['title'])) {
-          $days[] = $day;
-        }
+    foreach ($components as $component) {
+      $component = trim($component);
+
+      if (preg_match('/^Day (\d{1,2}):(.+)$/', $component, $dayMatch)) {
+        $day['day'] = trim($dayMatch[1]);
+        $day['title'] = trim($dayMatch[2]);
+      } elseif (preg_match('/^Altitude:(.+)$/i', $component, $altMatch)) {
+        $day['altitude'] = trim($altMatch[1]);
+      } elseif (preg_match('/^Meals:(.+)$/i', $component, $mealsMatch)) {
+        $day['meals'] = trim($mealsMatch[1]);
+      } elseif (preg_match('/^Description:(.+)$/i', $component, $descMatch)) {
+        $day['description'] = trim($descMatch[1]);
       }
     }
+
+    if (!empty($day['day']) && !empty($day['title'])) {
+      $days[] = $day;
+    }
+  }
+}
 
     // Display the formatted output
     // foreach ($days as $day) {
@@ -166,19 +200,27 @@ if ($id == '') {
     //     echo "<p><strong>Description:</strong> {$day['description']}</p>";
     //     echo "</div><br>";
     // }
-    $data = 1;
-    $qaText = $roo["faq"];
-    $qaPairs = preg_split('/(?<=\.)\s+(?=Q:)/', $qaText);
+$data = 1;
+$qaText = $roo["faq"];
 
-    $formattedQA = [];
-    foreach ($qaPairs as $pair) {
-      if (preg_match('/Q:\s*(.*?)\s*A:\s*(.*)/', $pair, $matches)) {
-        $formattedQA[] = [
-          'question' => trim($matches[1]),
-          'answer' => trim($matches[2])
-        ];
-      }
-    }
+// Strip HTML tags and decode entities
+$plainText = html_entity_decode(strip_tags($qaText));
+
+// Normalize slashes, line breaks, and extra spaces
+$plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+$plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse multiple spaces
+
+// Match Q: ... A: ...
+preg_match_all('/Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)/s', $plainText, $matches, PREG_SET_ORDER);
+
+$formattedQA = [];
+foreach ($matches as $match) {
+  $formattedQA[] = [
+    'question' => trim($match[1]),
+    'answer' => trim($match[2])
+  ];
+}
+
 
     // Display the formatted Q&A
     // foreach ($formattedQA as $qa) {
@@ -198,6 +240,10 @@ if ($id == '') {
 <html lang="en">
 
 <head>
+
+<!-- CKEditor -->
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?php echo $row["PostTitle"] ?> | Advanced Adventures</title>
@@ -410,8 +456,8 @@ if ($id == '') {
                 </svg>
               </div>
               <div>
-                <h3 class="mb-1 text-lg font-semibold"><?= htmlspecialchars($label) ?></h3>
-                <p class="text-gray-700"><?= htmlspecialchars($value) ?></p>
+                <h3 class="mb-1 text-lg font-semibold"><?= $label; ?></h3>
+                <p class="text-gray-700"><?= $value; ?></p>
               </div>
             </div>
           <?php endforeach; ?>
@@ -965,7 +1011,7 @@ if ($id == '') {
         <ul class="space-y-3 text-blue-700 list-disc list-inside">
           <?php if (!empty($smtrek)): ?>
             <?php foreach ($smtrek as $tour): ?>
-              <li><?= htmlspecialchars($tour) ?></li>
+              <li><?= $tour; ?></li>
             <?php endforeach; ?>
           <?php else: ?>
             <li>No similar tours available.</li>
@@ -985,12 +1031,12 @@ if ($id == '') {
             <div class="border border-gray-200 rounded-lg">
               <button @click="open !== <?php echo $data; ?> ? open = <?php echo $data; ?> : open = null"
                 class="flex items-center justify-between w-full px-4 py-3 font-semibold text-left text-gray-800">
-                <span><?php echo htmlspecialchars($qa['question']); ?></span>
+                <span><?php echo $qa['question']; ?></span>
                 <i class="fas fa-chevron-down text-[#005FAB]"
                   :class="{ 'rotate-180': open === <?php echo $data; ?> }"></i>
               </button>
               <div x-show="open === <?php echo $data; ?>" x-collapse class="px-4 pb-4 text-gray-700">
-                <p><?php echo htmlspecialchars($qa['answer']); ?></p>
+                <p><?php echo $qa['answer']; ?></p>
               </div>
             </div>
 

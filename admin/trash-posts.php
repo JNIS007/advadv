@@ -1,8 +1,7 @@
 <?php
 session_start();
 include('includes/config.php');
-error_reporting(0);
-
+error_reporting(E_ALL);
 if (strlen($_SESSION['login']) == 0) {
     header('location:index.php');
 } else {

@@ -9,10 +9,11 @@ if (!isset($_SESSION['login']) || strlen($_SESSION['login']) == 0) {
     exit;
 }
 
-if (isset($_GET['destination_id'])) {
+if (isset($_GET['destination_id']) && isset($_GET['category_id'])) {
     $destination_id = (int)$_GET['destination_id'];
-    $query = $con->prepare("SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1 AND DestID = ?");
-    $query->bind_param("i", $destination_id);
+    $c = (int)$_GET['category_id'];
+    $query = $con->prepare("SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1 AND DestID = ? AND CategoryId=?");
+    $query->bind_param("ii", $destination_id,$c);
     $query->execute();
     $result = $query->get_result();
     
