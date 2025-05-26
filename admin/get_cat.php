@@ -11,17 +11,17 @@ if (!isset($_SESSION['login']) || strlen($_SESSION['login']) == 0) {
 
 if (isset($_GET['destination_id'])) {
     $destination_id = (int)$_GET['destination_id'];
-    $query = $con->prepare("SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1 AND DestID = ?");
+    $query = $con->prepare("SELECT id, CategoryName FROM tblcategory WHERE Is_Active = 1 AND DestId = ?");
     $query->bind_param("i", $destination_id);
     $query->execute();
     $result = $query->get_result();
     
-    $posts = [];
+    $categories = [];
     while ($row = $result->fetch_assoc()) {
-        $posts[] = $row;
+        $categories[] = $row;
     }
     
-    echo json_encode($posts);
+    echo json_encode($categories);
 } else {
     echo json_encode(['error' => 'Destination ID required']);
 }

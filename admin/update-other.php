@@ -2,29 +2,28 @@
 session_start();
 include("./includes/config.php");
 
-// Function to completely clean text content
-function clean_text_input($input, $con) {
+// Function to clean text input but preserve HTML from CKEditor
+function clean_input($input, $con, $allow_html = false) {
     if (empty($input)) {
         return '';
     }
     
-    // Decode HTML entities (converts &nbsp; to spaces)
+    if ($allow_html) {
+        // For CKEditor content, just escape it for database
+        return mysqli_real_escape_string($con, trim($input));
+    }
+    
+    // For regular text fields
     $clean = html_entity_decode($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    
-    // Remove all HTML tags
     $clean = strip_tags($clean);
-    
-    // Replace multiple spaces/newlines with single space
     $clean = preg_replace('/\s+/', ' ', $clean);
-    
-    // Trim and escape for database
     return mysqli_real_escape_string($con, trim($clean));
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         // Validate required fields
-        $required_fields = ['It', 'Nt', 'related_post_id', 'id'];
+        $required_fields = ['It', 'Nt', 'related_post_id', 'id', 'pagetitle', 'keyword', 'Author', 'Desc'];
         foreach ($required_fields as $field) {
             if (empty($_POST[$field])) {
                 throw new Exception(ucfirst(str_replace('_', ' ', $field)) . " is a required field");
@@ -39,16 +38,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Invalid ID");
         }
 
-        // Verify records exist using prepared statements
-        $stmt = $con->prepare("SELECT id FROM tblposts WHERE id = ? AND Is_Active = 1");
-        $stmt->bind_param("i", $related_post_id);
-        $stmt->execute();
-        $stmt->store_result();
-        
-        if ($stmt->num_rows === 0) {
-            throw new Exception("Selected post doesn't exist or is inactive");
-        }
-        $stmt->close();
+            // Update the post validation to:
+            $stmt = $con->prepare("SELECT id FROM tblposts WHERE id = ?");
+            $stmt->bind_param("i", $related_post_id);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows === 0) {
+                throw new Exception("Selected post with ID $related_post_id doesn't exist in the system");
+            }
+            $stmt->close();
 
         $stmt = $con->prepare("SELECT id FROM other WHERE id = ? AND is_active = 1");
         $stmt->bind_param("i", $id);
@@ -62,19 +61,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Prepare all data with proper sanitization
         $fields = [
-            'It' => 'itinerary',
-            'Nt' => 'important_note',
-            'useful_info' => 'useful_info',
-            'whats_included' => 'whats_included',
-            'whats_Excluded' => 'whats_excluded',
-            'faq' => 'faq',
-            'req' => 'recommended_package'
+            'It' => ['field' => 'itinerary', 'html' => true],
+            'Nt' => ['field' => 'important_note', 'html' => true],
+            'useful_info' => ['field' => 'useful_info', 'html' => true],
+            'whats_included' => ['field' => 'whats_included', 'html' => true],
+            'whats_Excluded' => ['field' => 'whats_excluded', 'html' => true],
+            'faq' => ['field' => 'faq', 'html' => true],
+            'req' => ['field' => 'recommended_package', 'html' => true]
         ];
 
         $data = [];
-        foreach ($fields as $post_key => $var_name) {
-            $data[$var_name] = isset($_POST[$post_key]) ? 
-                clean_text_input($_POST[$post_key], $con) : '';
+        foreach ($fields as $post_key => $config) {
+            $data[$config['field']] = isset($_POST[$post_key]) ? 
+                clean_input($_POST[$post_key], $con, $config['html']) : '';
         }
 
         // Process chart data with same cleaning
@@ -84,13 +83,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if (!empty(trim($outline))) {
                     $height = $_POST['height_in_meter'][$index] ?? '';
                     $chart_data[] = [
-                        'outline' => clean_text_input($outline, $con),
-                        'height' => clean_text_input($height, $con)
+                        'outline' => clean_input($outline, $con),
+                        'height' => clean_input($height, $con)
                     ];
                 }
             }
         }
-        $chart_data_json = json_encode($chart_data);
+        $chart_data_json = !empty($chart_data) ? json_encode($chart_data) : '';
+
+        // Clean SEO fields
+        $seo_fields = [
+            'pagetitle' => clean_input($_POST['pagetitle'], $con),
+            'keyword' => clean_input($_POST['keyword'], $con),
+            'Author' => clean_input($_POST['Author'], $con),
+            'Desc' => clean_input($_POST['Desc'], $con)
+        ];
 
         // Use prepared statement for the update
         $stmt = $con->prepare("UPDATE other SET
@@ -103,10 +110,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             Recommended_Package = ?,
             chart_data = ?,
             P_id = ?,
+            PageTitle = ?,
+            Keywords = ?,
+            MetaAuthor = ?,
+            `Description` = ?,
             created_at = NOW()
             WHERE id = ?");
 
-        $stmt->bind_param("ssssssssii",
+        $stmt->bind_param("ssssssssissssi",
             $data['itinerary'],
             $data['important_note'],
             $data['useful_info'],
@@ -116,6 +127,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $data['recommended_package'],
             $chart_data_json,
             $related_post_id,
+            $seo_fields['pagetitle'],
+            $seo_fields['keyword'],
+            $seo_fields['Author'],
+            $seo_fields['Desc'],
             $id
         );
 
@@ -131,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION["error"] = "Error: " . $e->getMessage();
         $_SESSION['form_data'] = $_POST;
     } finally {
-        header("Location: edit-other.php?oid=" . $id);
+        header("Location: edit-other.php?oid=" . (isset($id) ? $id : ''));
         exit();
     }
 } else {

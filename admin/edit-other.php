@@ -196,6 +196,7 @@ if (strlen($_SESSION['login']) == 0) {
                 <div class="tab" data-tab="FAQ">FAQ</div>
                 <div class="tab" data-tab="RECOMMENDED_PACKAGE">RECOMMENDED PACKAGE</div>
                 <div class="tab" data-tab="CHART">CHART</div>
+                <div class="tab" data-tab="SEO">SEO</div>
                 <div class="tab" data-tab="BELONGS">BELONGS TO</div>
               </div>
 
@@ -248,25 +249,74 @@ if (strlen($_SESSION['login']) == 0) {
                     name="req"><?php echo isset($data['Recommended_Package']) ? htmlspecialchars($data['Recommended_Package']) : ''; ?></textarea>
                 </div>
               </div>
-
-              <div class="tab-content" data-tab="BELONGS" style="display:none;">
+               <div class="tab-content" data-tab="SEO" style="display:none;">
                 <div class="card-box">
-                  <h4><b>Belongs To:</b></h4>
-                  <div class="form-group mb-3">
-                    <label for="postTitle">Related Post:</label>
-                    <select class="form-control" name="related_post_id" id="postTitle" required>
-                      <option value="">-- Select Post --</option>
-                      <?php
-                      $query = mysqli_query($con, "SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1");
-                      while ($row = mysqli_fetch_assoc($query)) {
-                        $selected = (isset($data['P_id']) && $data['P_id'] == $row['id']) ? 'selected' : '';
-                        echo '<option value="' . $row['id'] . '" ' . $selected . '>' . htmlspecialchars($row['PostTitle']) . '</option>';
-                      }
-                      ?>
-                    </select>
+                  <h4><b>SEO:</b></h4>
+                  <div class="form-group m-b-20">
+                    <label for="posttitle">Page Title</label>
+                    <input type="text" class="form-control" id="posttitle" name="pagetitle" placeholder="Enter title" required 
+                      value="<?php echo isset($data['PageTitle']) ? htmlspecialchars($data['PageTitle']) : ''; ?>">
                   </div>
+                  <div class="form-group m-b-20">
+                    <label for="postkeywords">Meta Keywords</label>
+                    <input type="text" class="form-control" id="postkeywords" name="keyword" placeholder="Enter Keywords" required
+                      value="<?php echo isset($data['Keywords']) ? htmlspecialchars($data['Keywords']) : ''; ?>">
+                  </div>
+                  <div class="form-group m-b-20">
+                    <label for="postauthor">Meta Author</label>
+                    <input type="text" class="form-control" id="postauthor" name="Author" placeholder="Enter Author" required
+                      value="<?php echo isset($data['MetaAuthor']) ? htmlspecialchars($data['MetaAuthor']) : ''; ?>">
+                  </div>
+                  <label for="exampleInputEmail1">Meta Description</label>
+                  <textarea class="form-control" id="editor8" name="Desc"><?php 
+                    echo isset($data['Description']) ? htmlspecialchars($data['Description']) : ''; 
+                  ?></textarea>
                 </div>
               </div>
+
+    <div class="tab-content" data-tab="BELONGS" style="display:none;">
+    <div class="card-box">
+        <h4><b>Belongs To:</b></h4>
+        <div class="form-group mb-3">
+            <label for="destination">Destination:</label>
+            <select class="form-control" name="destination" id="destination" required>
+                <option value="">-- Select Destination --</option>
+                <?php
+                $destQuery = mysqli_query($con, "SELECT id, DestName FROM tbldest WHERE Is_Active = 1;");
+                while ($destRow = mysqli_fetch_assoc($destQuery)) {
+                    // Get the destination ID from the post
+                    $postQuery = mysqli_query($con, "SELECT DestID FROM tblposts WHERE id = " . intval($data['P_id']));
+                    $postRow = mysqli_fetch_assoc($postQuery);
+                    
+                    $selected = ($postRow['DestID'] == $destRow['id']) ? 'selected' : '';
+                    echo '<option value="' . $destRow['id'] . '" ' . $selected . '>' . htmlspecialchars($destRow['DestName']) . '</option>';
+                }
+                ?>
+            </select>
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="category">Category:</label>
+            <select class="form-control" name="category" id="category" required>
+                <option value="">-- Loading Categories... --</option>
+            </select>
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="postTitle">Related Post:</label>
+            <select class="form-control" name="related_post_id" id="postTitle" required>
+                <option value="<?php echo $data['P_id']; ?>" selected>
+                    <?php 
+                    $postQuery = mysqli_query($con, "SELECT PostTitle FROM tblposts WHERE id = " . intval($data['P_id']));
+                    $postRow = mysqli_fetch_assoc($postQuery);
+                    echo htmlspecialchars($postRow['PostTitle']);
+                    ?>
+                </option>
+              
+            </select>
+        </div>
+    </div>
+</div>
 
               <div class="tab-content" data-tab="CHART" style="display:none;">
                 <div class="card-box">
@@ -390,6 +440,93 @@ if (strlen($_SESSION['login']) == 0) {
           alert('Please fill in all required fields');
         }
       });
+
+   // Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const destinationSelect = document.getElementById('destination');
+    const categorySelect = document.getElementById('category');
+    const postSelect = document.getElementById('postTitle');
+    
+    // For edit mode, load categories when page loads
+    if (destinationSelect.value) {
+        loadCategories(destinationSelect.value);
+    }
+    
+    // Destination change handler
+    destinationSelect.addEventListener('change', function() {
+        if (this.value) {
+            loadCategories(this.value);
+            // Reset posts dropdown
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+        } else {
+            categorySelect.innerHTML = '<option value="">-- Select Destination First --</option>';
+            categorySelect.disabled = true;
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+        }
+    });
+    
+    // Category change handler
+    categorySelect.addEventListener('change', function() {
+        if (this.value && destinationSelect.value) {
+            loadPosts(destinationSelect.value, this.value);
+        } else {
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+        }
+    });
+});
+
+function loadCategories(destinationId) {
+    const categorySelect = document.getElementById('category');
+    
+    fetch('get_cat.php?destination_id=' + destinationId)
+        .then(response => response.json())
+        .then(categories => {
+            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.CategoryName;
+                categorySelect.appendChild(option);
+            });
+            categorySelect.disabled = false;
+            
+            // For edit mode, select the saved category
+            <?php if (isset($data['P_id'])): ?>
+            const savedCategoryId = <?php 
+                $catQuery = mysqli_query($con, "SELECT CategoryId FROM tblposts WHERE id = " . intval($data['P_id']));
+                $catRow = mysqli_fetch_assoc($catQuery);
+                echo $catRow['CategoryId'] ?? 'null';
+            ?>;
+            if (savedCategoryId) {
+                categorySelect.value = savedCategoryId;
+                // Trigger posts load
+                loadPosts(destinationId, savedCategoryId);
+            }
+            <?php endif; ?>
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function loadPosts(destinationId, categoryId) {
+    const postSelect = document.getElementById('postTitle');
+    
+    fetch('get_posts.php?destination_id=' + destinationId + '&category_id=' + categoryId)
+        .then(response => response.json())
+        .then(posts => {
+            // postSelect.innerHTML = '<option value="">-- Select Post --</option>';
+            posts.forEach(post => {
+                const option = document.createElement('option');
+                option.value = post.id;
+                option.textContent = post.PostTitle;
+                postSelect.appendChild(option);
+            });
+            postSelect.disabled = false;
+        })
+        .catch(error => console.error('Error:', error));
+}
     </script>
 
     <!-- jQuery  -->
@@ -415,111 +552,22 @@ if (strlen($_SESSION['login']) == 0) {
     <script>
       jQuery(document).ready(function () {
         // Initialize CKEditor for all textareas
-        CKEDITOR.replace('editor1', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor2', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor3', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor4', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor5', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor6', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
-        CKEDITOR.replace('editor7', {
-          toolbar: [
-            { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
-          ],
-          height: 300
-        });
-
+        for (let i = 1; i <= 8; i++) {
+          CKEDITOR.replace('editor' + i, {
+            toolbar: [
+              { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
+              { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+              { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
+              { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+              { name: 'colors', items: ['TextColor', 'BGColor'] },
+              { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
+              { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+              { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
+              { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+            ],
+            height: 300
+          });
+        }
         // Initialize Select2
         $(".select2").select2();
         $(".select2-limiting").select2({ maximumSelectionLength: 2 });
