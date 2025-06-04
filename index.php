@@ -1,7 +1,3 @@
-<?php
-include("./admin/includes/config.php")
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,9 +7,9 @@ include("./admin/includes/config.php")
   <title>Advanced Adventures - Nepal Trekking & Tours</title>
   <!-- Header -->
   <?php
+  include("./admin/includes/config.php");
   include("header.php");
   ?>
-  <!-- Tailwind CSS -->
 
   <!-- Hero Slider -->
   <section class="relative">
@@ -22,7 +18,7 @@ include("./admin/includes/config.php")
       <div class="swiper-wrapper">
         <!-- Slide 1 - Everest Base Camp -->
         <?php
-        $q = mysqli_query($con, "SELECT * FROM tblposts WHERE Is_Active = 1");
+        $q = mysqli_query($con, "SELECT * FROM tblposts WHERE Is_Active = 1 and selected =1");
         while ($r = mysqli_fetch_array($q)) {
           $ct = $r["CategoryId"];
         ?>
@@ -61,7 +57,7 @@ include("./admin/includes/config.php")
                 </div>
 
                 <!-- CTA Button -->
-                <a href="#"
+                <a href="<?php echo URL;?>?id=<?php echo urlencode($r['id']); ?>"
                   class="inline-block px-8 py-3 mt-8 text-lg font-bold transition delay-300 bg-white rounded-md text-primary hover:bg-gray-100 animate-fadeIn">
                   Explore This Trek
                 </a>
@@ -85,16 +81,22 @@ include("./admin/includes/config.php")
       <div class="p-8 border border-gray-200 shadow-2xl backdrop-blur-lg bg-white/80 rounded-2xl">
         <h3 class="mb-6 text-3xl font-bold text-center text-gray-900">Find Your Perfect Adventure</h3>
 
-        <!-- Search Bar -->
-        <div class="mb-6">
-          <input type="text" placeholder="Search for a trip..."
-            class="w-full p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
-        </div>
+<!-- Search Bar -->
+<div class="mb-6">
+  <div class="flex gap-2">
+    <input type="text" placeholder="Search for a trip..."
+      class="flex-grow p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
+    <button type="submit"
+      class="flex items-center justify-center gap-2 px-6 py-3 text-lg font-semibold text-white transition transform rounded-lg shadow-lg bg-primary hover:bg-blue-700 hover:scale-105">
+      <i class="fas fa-search"></i> Search
+    </button>
+  </div>
+</div>
 
         <form class="grid grid-cols-1 gap-6 md:grid-cols-4">
 
           <!-- Destination Select -->
-          <div>
+          <!-- <div>
             <label for="destination" class="block mb-2 text-sm font-semibold text-gray-700">Destination</label>
             <select id="destination"
               class="w-full p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
@@ -103,10 +105,10 @@ include("./admin/includes/config.php")
               <option value="tibet">Tibet</option>
               <option value="bhutan">Bhutan</option>
             </select>
-          </div>
+          </div> -->
 
           <!-- Activity Select -->
-          <div>
+          <!-- <div>
             <label for="activity" class="block mb-2 text-sm font-semibold text-gray-700">Activity</label>
             <select id="activity"
               class="w-full p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
@@ -115,10 +117,10 @@ include("./admin/includes/config.php")
               <option value="climbing">Peak Climbing</option>
               <option value="tours">Cultural Tours</option>
             </select>
-          </div>
+          </div> -->
 
           <!-- Duration Select -->
-          <div>
+          <!-- <div>
             <label for="duration" class="block mb-2 text-sm font-semibold text-gray-700">Duration</label>
             <select id="duration"
               class="w-full p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
@@ -127,15 +129,10 @@ include("./admin/includes/config.php")
               <option value="8-14">8-14 Days</option>
               <option value="15+">15+ Days</option>
             </select>
-          </div>
+          </div> -->
 
           <!-- Search Button -->
-          <div class="flex items-end">
-            <button type="submit"
-              class="flex items-center justify-center w-full gap-2 px-6 py-3 text-lg font-semibold text-white transition transform rounded-lg shadow-lg bg-primary hover:bg-blue-700 hover:scale-105">
-              <i class="fas fa-search"></i> Search
-            </button>
-          </div>
+         
 
         </form>
       </div>
@@ -356,7 +353,7 @@ include("./admin/includes/config.php")
               <p class="mb-4 text-gray-600 line-clamp-3">
                 <?php echo htmlentities(substr($row['PostDetails'], 0, 150)); ?>...
               </p>
-              <a href="http://localhost/adv/new_page.php?id=<?php echo urlencode($row['id']); ?>"
+              <a href="<?php echo URL;?>?id=<?php echo urlencode($row['id']); ?>"
                 class="inline-flex items-center font-medium transition text-primary hover:text-blue-800">
                 Explore This Trek <i class="ml-2 fas fa-arrow-right"></i>
               </a>
@@ -657,7 +654,7 @@ include("./admin/includes/config.php")
               <p class="mb-4 text-gray-600 line-clamp-3">
                 <?php echo htmlentities(substr($ro['PostDetails'], 0, 150)); ?>...
               </p>
-              <a href="http://localhost/adv/new_page.php?id=<?php echo urlencode($ro['id']); ?>"
+              <a href="<?php echo URL;?>?id=<?php echo urlencode($ro['id']); ?>"
                 class="inline-flex items-center font-medium transition text-primary hover:text-blue-800">
                 Explore This Trek <i class="ml-2 fas fa-arrow-right"></i>
               </a>

@@ -11,7 +11,6 @@
                         </span> </a>
 
                 </li>
-                <?php if ($_SESSION['utype'] == '1'): ?>
                     <li class="has_sub">
                         <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-format-list-bulleted"></i>
                             <span> Sub-admins </span> <span class="menu-arrow"></span></a>
@@ -20,7 +19,6 @@
                             <li><a href="manage-subadmins.php">Manage Sub-admin</a></li>
                         </ul>
                     </li>
-                <?php endif; ?>
 
 
                 <li class="has_sub">
@@ -38,6 +36,14 @@
                     <ul class="list-unstyled">
                         <li><a href="add-category.php">Add Category</a></li>
                         <li><a href="manage-categories.php">Manage Category</a></li>
+                    </ul>
+                </li>
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-format-list-bulleted"></i>
+                        <span> SubCategory </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="add-subcategory.php">Add SubCategory</a></li>
+                        <li><a href="manage-subcategories.php">Manage SubCategory</a></li>
                     </ul>
                 </li>
 
@@ -60,6 +66,29 @@
                     <ul class="list-unstyled">
                         <li><a href="add-top.php">Peak Top Adventure</a></li>
                         <li><a href="manage-top.php">Manage </a></li>
+                    </ul>
+                </li>
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-format-list-bulleted"></i>
+                        <span> Travel Guide </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="add-travel.php">Add Travel Guid</a></li>
+                        <li><a href="manage-travel.php">Manage </a></li>
+                    </ul>
+                </li>
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-format-list-bulleted"></i>
+                        <span>  CSR </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="add-cms.php">Add CSR</a></li>
+                        <li><a href="manage-cms.php">Manage </a></li>
+                    </ul>
+                </li>
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-format-list-bulleted"></i>
+                        <span>  Pick Slider Post </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="pick.php">Pick </a></li>
                     </ul>
                 </li>
 

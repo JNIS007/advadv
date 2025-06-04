@@ -136,6 +136,14 @@ if (strlen($_SESSION['login']) == 0) {
                                                     <!-- Categories will be loaded via AJAX -->
                                                 </select>
                                             </div>
+                                            <!-- Add this after the Category dropdown -->
+                                            <div class="form-group m-b-20">
+                                                <label for="exampleInputEmail1">Subcategory</label>
+                                                <select class="form-control" name="subcategory" id="subcategory" disabled required>
+                                                    <option value="">Select Subcategory (if any)</option>
+                                                    <!-- Subcategories will be loaded via AJAX -->
+                                                </select>
+                                            </div>
 
                                             <div class="form-group m-b-20">
                                                 <label for="exampleInputEmail1">Package Title</label>
@@ -238,45 +246,82 @@ if (strlen($_SESSION['login']) == 0) {
         <script src="assets/js/jquery.app.js"></script>
 
         <script>
-            jQuery(document).ready(function () {
-                // Initialize Select2
-                $(".select2").select2();
-                $(".select2-limiting").select2({
-                    maximumSelectionLength: 2
-                });
+    jQuery(document).ready(function () {
+        // Initialize Select2
+        $(".select2").select2();
+        $(".select2-limiting").select2({
+            maximumSelectionLength: 2
+        });
 
-                // Destination change handler
-                $('#destination').change(function() {
-                    var destId = $(this).val();
-                    var categorySelect = $('#category');
-                    
-                    // Clear existing options except the first one
-                    categorySelect.find('option').not(':first').remove();
-                    
-                    if(destId) {
-                        // Fetch categories for the selected destination via AJAX
-                        $.ajax({
-                            url: 'get_categories.php',
-                            type: 'POST',
-                            data: {dest_id: destId},
-                            dataType: 'json',
-                            success: function(data) {
-                                if(data.length > 0) {
-                                    $.each(data, function(key, value) {
-                                        categorySelect.append('<option value="'+ value.id +'">'+ value.CategoryName +'</option>');
-                                    });
-                                } else {
-                                    categorySelect.append('<option value="">No categories found</option>');
-                                }
-                            },
-                            error: function(xhr, status, error) {
-                                console.error("AJAX Error: " + status + " - " + error);
-                            }
-                        });
+        // Destination change handler
+        $('#destination').change(function() {
+            var destId = $(this).val();
+            var categorySelect = $('#category');
+            
+            // Clear existing options except the first one
+            categorySelect.find('option').not(':first').remove();
+            $('#subcategory').prop('disabled', true).find('option').not(':first').remove();
+            
+            if(destId) {
+                // Fetch categories for the selected destination via AJAX
+                $.ajax({
+                    url: 'get_categories.php',
+                    type: 'POST',
+                    data: {dest_id: destId},
+                    dataType: 'json',
+                    success: function(data) {
+                        if(data.length > 0) {
+                            $.each(data, function(key, value) {
+                                categorySelect.append('<option value="'+ value.id +'">'+ value.CategoryName +'</option>');
+                            });
+                        } else {
+                            categorySelect.append('<option value="">No categories found</option>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: " + status + " - " + error);
                     }
                 });
-            });
-        </script>
+            }
+        });
+
+        // Category change handler
+        $('#category').change(function() {
+            var categoryId = $(this).val();
+            var subcategorySelect = $('#subcategory');
+            
+            // Clear existing options except the first one
+            subcategorySelect.find('option').not(':first').remove();
+            
+            if(categoryId) {
+                // Fetch subcategories for the selected category via AJAX
+                $.ajax({
+                    url: 'get_subcategories.php',
+                    type: 'POST',
+                    data: {category_id: categoryId},
+                    dataType: 'json',
+                    success: function(data) {
+                        if(data.length > 0) {
+                            subcategorySelect.prop('disabled', false);
+                            $.each(data, function(key, value) {
+                                console.log()
+                                subcategorySelect.append('<option value="'+ value.id +'">'+ value.Subcategory+'</option>');
+                            });
+                        } else {
+                            subcategorySelect.prop('disabled', true);
+                            subcategorySelect.append('<option value="">No subcategories available</option>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: " + status + " - " + error);
+                    }
+                });
+            } else {
+                subcategorySelect.prop('disabled', true);
+            }
+        });
+    });
+</script>
     </body>
     </html>
 <?php } ?>

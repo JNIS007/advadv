@@ -12,21 +12,56 @@ while ($dest = mysqli_fetch_assoc($dests)) {
   $cats = mysqli_query($con, "SELECT * FROM tblcategory WHERE destId = $destId");
   while ($cat = mysqli_fetch_assoc($cats)) {
     $catId = $cat['id'];
+    $catName = $cat['CategoryName'];
     $menuData[$destId]['categories'][$catId] = [
-      'name' => $cat['CategoryName'],
-      'posts' => []
+      'id'=>$catId,
+      'name' => $catName,
+      'posts' => [],
+      'subcategories' => []
     ];
 
-    $posts = mysqli_query($con, "SELECT * FROM tblposts WHERE CategoryId = $catId");
-    while ($post = mysqli_fetch_assoc($posts)) {
-      $menuData[$destId]['categories'][$catId]['posts'][] = [
-        'id' => $post['id'],
-        'title' => $post['PostTitle']
+    // Fetch subcategories
+    $subcats = mysqli_query($con, "SELECT * FROM tblsubcategory WHERE CategoryId = $catId AND Is_Active = 1");
+    while ($subcat = mysqli_fetch_assoc($subcats)) {
+      $subcatId = $subcat['id'];
+      $subcatEntry = [
+        'id' => $subcatId,
+        'name' => $subcat['Subcategory'],
+        'sposts' => []
       ];
+
+      // Get posts for each subcategory
+      $sposts = mysqli_query($con, "SELECT  * FROM tblposts where CategoryId='$catId' and SubCategoryId='$subcatId ' ORDER BY sort_order ASC;");
+      while ($post = mysqli_fetch_assoc($sposts)) {
+        $subcatEntry['sposts'][] = [
+          'id' => $post['id'],
+          'title' => $post['PostTitle']
+        ];
+      }
+
+      $menuData[$destId]['categories'][$catId]['subcategories'][] = $subcatEntry;
+    }
+
+    // Only include top-level posts if category is NOT "Trekking in Nepal in Mountains" or "Tours in Nepal"
+    if ($catName !== "Trekking in Nepal in Mountains" && $catName !== "Tours in Nepal") {
+      $posts = mysqli_query($con, "SELECT * FROM tblposts WHERE CategoryId = $catId ORDER BY sort_order ASC");
+      while ($post = mysqli_fetch_assoc($posts)) {
+        $menuData[$destId]['categories'][$catId]['posts'][] = [
+          'id' => $post['id'],
+          'title' => $post['PostTitle']
+        ];
+      }
     }
   }
 }
+
+// $json = json_encode($menuData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+// echo "<pre>";
+// echo $json;
+// echo "</pre>";
 ?>
+
+
 
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -336,6 +371,9 @@ while ($dest = mysqli_fetch_assoc($dests)) {
           <a href="https://api.whatsapp.com/send?phone=9779851189771" target="_blank" class="hover:text-secondary">
             <i class="mr-1 fab fa-whatsapp"></i> WhatsApp
           </a>
+          <a href="https://api.whatsapp.com/send?phone=9779851189771" target="_blank" class="hover:text-secondary">
+            <i class="mr-1 fab fa-whatsapp"></i> Talk To Expert
+          </a>
           <a href="viber://contact?number=9779851189771" target="_blank" class="hover:text-secondary">
             <i class="mr-1 fab fa-viber"></i> Viber
           </a>
@@ -355,51 +393,91 @@ while ($dest = mysqli_fetch_assoc($dests)) {
 
         <!-- Desktop Navigation -->
         <nav class="items-center hidden space-x-8 lg:flex">
-          <!-- Destinations Mega Menu -->
-          <div class="relative">
-            <button id="main-toggle" class="flex items-center font-medium text-gray-700 transition hover:text-primary">
-              Destination <i class="ml-1 text-xs fas fa-chevron-down"></i>
-            </button>
+<!-- Destinations Mega Menu -->
+<div class="relative">
+  <button id="main-toggle" class="flex items-center font-medium text-gray-700 transition hover:text-primary">
+    Destination <i class="ml-1 text-xs fas fa-chevron-down"></i>
+  </button>
 
-            <div id="countries-dropdown" class="absolute left-0 hidden w-48 mt-2 bg-white rounded-md shadow-xl">
+  <div id="countries-dropdown" class="absolute left-0 hidden w-48 mt-2 bg-white rounded-md shadow-xl">
+    <ul class="py-1">
+      <?php foreach ($menuData as $destId => $dest): ?>
+        <li class="relative group">
+          <button class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">
+            <?= htmlspecialchars($dest['name']) ?> 
+            <?php if (!empty($dest['categories'])): ?>
+              <i class="ml-2 text-xs fas fa-chevron-right"></i>
+            <?php endif; ?>
+          </button>
+
+          <?php if (!empty($dest['categories'])): ?>
+            <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
               <ul class="py-1">
-                <?php foreach ($menuData as $dest): ?>
+                <?php foreach ($dest['categories'] as $catId => $cat): ?>
                   <li class="relative group">
-                    <button
-                      class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">
-                      <?= $dest['name'] ?> <i class="ml-2 text-xs fas fa-chevron-right"></i>
+                    <button class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">
+                      <?= htmlspecialchars($cat['name']) ?> 
+                      <?php if (!empty($cat['subcategories']) || !empty($cat['posts'])): ?>
+                        <i class="ml-2 text-xs fas fa-chevron-right"></i>
+                      <?php endif; ?>
                     </button>
 
-                    <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
-                      <ul class="py-1">
-                        <?php foreach ($dest['categories'] as $cat): ?>
-                          <li class="relative group">
-                            <button
-                              class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">
-                              <?= $cat['name'] ?> <i class="ml-2 text-xs fas fa-chevron-right"></i>
-                            </button>
-
-                            <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
-                              <ul class="py-1">
-                                <?php foreach ($cat['posts'] as $post): ?>
-                                  <li>
-                                    <a href="new_page.php?id=<?= $post['id'] ?>"
-                                      class="block px-4 py-2 hover:bg-gray-50 hover:text-secondary">
-                                      <?= $post['title'] ?>
-                                    </a>
-                                  </li>
-                                <?php endforeach; ?>
-                              </ul>
-                            </div>
-                          </li>
-                        <?php endforeach; ?>
-                      </ul>
-                    </div>
+                    <?php if (!empty($cat['subcategories'])): ?>
+                      <!-- Show subcategories if they exist -->
+                      <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
+                        <ul class="py-1">
+                          <?php foreach ($cat['subcategories'] as $subcat): ?>
+                            <li class="relative group">
+                              <?php if (!empty($subcat['sposts'])): ?>
+                                <button class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">
+                                  <?= htmlspecialchars($subcat['name']) ?> 
+                                  <i class="ml-2 text-xs fas fa-chevron-right"></i>
+                                </button>
+                                
+                                <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
+                                  <ul class="py-1">
+                                    <?php foreach ($subcat['sposts'] as $post): ?>
+                                      <li>
+                                        <a href="new_page.php?id=<?= $post['id'] ?>" class="block px-4 py-2 hover:bg-gray-50 hover:text-secondary">
+                                          <?= htmlspecialchars($post['title']) ?>
+                                        </a>
+                                      </li>
+                                    <?php endforeach; ?>
+                                  </ul>
+                                </div>
+                              <?php else: ?>
+                                <span class="block px-4 py-2 text-gray-400">
+                                  <?= htmlspecialchars($subcat['name']) ?>
+                                </span>
+                              <?php endif; ?>
+                            </li>
+                          <?php endforeach; ?>
+                        </ul>
+                      </div>
+                    <?php elseif (!empty($cat['posts'])): ?>
+                      <!-- Show posts directly if no subcategories exist -->
+                      <div class="absolute top-0 hidden bg-white rounded-md shadow-xl whitespace-nowrap left-full">
+                        <ul class="py-1">
+                          <?php foreach ($cat['posts'] as $post): ?>
+                            <li>
+                              <a href="new_page.php?id=<?= $post['id'] ?>" class="block px-4 py-2 hover:bg-gray-50 hover:text-secondary">
+                                <?= htmlspecialchars($post['title']) ?>
+                              </a>
+                            </li>
+                          <?php endforeach; ?>
+                        </ul>
+                      </div>
+                    <?php endif; ?>
                   </li>
                 <?php endforeach; ?>
               </ul>
             </div>
-          </div>
+          <?php endif; ?>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
+</div>
 
 
 
@@ -427,17 +505,18 @@ while ($dest = mysqli_fetch_assoc($dests)) {
               Travel Guide <i class="fas fa-chevron-down"></i>
             </div>
 
+
             <!-- Dropdown Menu -->
             <div id="travel-dropdown" class="absolute left-0 z-50 hidden w-48 mt-2 bg-white rounded-md shadow-lg">
-              <a href="nepalvisa.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Nepali Visa</a>
-              <a href="nepaltravelguide.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Nepal Travel Guide</a>
-              <a href="equipmentchecklist.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Equipment Check List</a>
-              <a href="travelinsurance.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Travel Insurance</a>
-              <a href="besttimetotravel.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Best Time To Travel Nepal</a>
-              <a href="packinglist.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Packing List</a>
-              <a href="bhutantravelguide.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Bhutan Travel Guide</a>
-              <a href="tibettravelguide.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Tibet Travel Guide</a>
+               <?php
+            $Query= mysqli_query($con,"select * from travel_guide where status=1");
+            while($got_data= mysqli_fetch_assoc($Query)){
+            ?>
+             <a href="travel.php?id=<?php echo $got_data["id"];?>" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary"><?php echo $got_data["Title"];?></a>
+              <?php } ?>
+              
             </div>
+             
           </div>
 
 
@@ -451,20 +530,18 @@ while ($dest = mysqli_fetch_assoc($dests)) {
 
             <!-- Dropdown Menu -->
             <div id="csr-dropdown" class="absolute left-0 z-50 hidden mt-2 bg-white rounded-md shadow-lg w-72">
-              <a href="Responsible_tourism.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Responsible Tourism in Nepal with Advanced Adventures</a>
-              <a href="HealthandposterPolicy.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Health & Porter Policy</a>
-              <a href="Education.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Education</a>
-              <a href="SocialAwareness.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Social Awareness</a>
-              <a href="PostQuakeRelief.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Post-Quake Relief</a>
-              <a href="Environment.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Environment</a>
-              <a href="LearnNepelaseLanguage.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Learn Nepalese Language</a>
-              <a href="VolunteerTeaching.php" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary">Volunteer Teaching</a>
+              <?php
+            $k= mysqli_query($con,"select * from cms where status=1");
+            while($got= mysqli_fetch_assoc($k)){
+            ?>
+             <a href="CSR.php?id=<?php echo $got["id"];?>" class="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-50 hover:text-secondary"><?php echo $got["Title"];?></a>
+              <?php } ?>
             </div>
           </div>
 
           <a href="/testimonials.html" class="font-medium text-gray-700 transition hover:text-primary">Trip Reviews</a>
           <a href="#" class="font-medium text-gray-700 transition hover:text-primary">Travel Blog</a>
-          <a href="#" class="font-medium text-gray-700 transition hover:text-primary">Contact</a>
+          <a href="contact.php" class="font-medium text-gray-700 transition hover:text-primary">Contact</a>
           <!-- Search Button -->
           <button class="p-2 text-gray-600 hover:text-primary">
             <i class="fas fa-search"></i>

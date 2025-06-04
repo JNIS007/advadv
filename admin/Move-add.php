@@ -7,6 +7,7 @@ include("./includes/config.php");
 if (isset($_POST['submit'])) {
     $posttitle = $_POST['posttitle'];
     $catid = $_POST['category'];
+    $subcatid = isset($_POST['subcategory']) ? $_POST['subcategory'] : NULL ;
     $dest = $_POST['Destination'];
     $price = $_POST['price'];
     $day = $_POST['day'];
@@ -27,7 +28,7 @@ if (isset($_POST['submit'])) {
         move_uploaded_file($_FILES["postimage"]["tmp_name"], "postimages/" . $imgnewfile);
 
         $status = 1;
-        $query = mysqli_query($con, "insert into tblposts(PostTitle,CategoryId,PostDetails,PostUrl,Is_Active,PostImage,postedBy,Price,Days,DestID) values('$posttitle','$catid','$postdetails','$url','$status','$imgnewfile','$postedby','$price','$day','$dest')");
+        $query = mysqli_query($con, "insert into tblposts(PostTitle,CategoryId,PostDetails,PostUrl,Is_Active,PostImage,postedBy,Price,Days,DestID,SubCategoryId) values('$posttitle','$catid','$postdetails','$url','$status','$imgnewfile','$postedby','$price','$day','$dest','$subcatid')");
 
         if ($query) {
             $_SESSION['msg'] = "Post successfully added";

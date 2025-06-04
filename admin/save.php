@@ -2,15 +2,66 @@
 session_start();
 include("./includes/config.php");
 
-// Function to clean text input but preserve HTML from CKEditor
+// Function to clean text input with HTML sanitization for CKEditor
 function clean_input($input, $con, $allow_html = false) {
     if (empty($input)) {
         return '';
     }
     
+    $input = trim($input);
+    
     if ($allow_html) {
-        // For CKEditor content, just escape it for database
-        return mysqli_real_escape_string($con, trim($input));
+        // Define allowed HTML tags for CKEditor content
+        $allowed_tags = '<p><a><strong><em><b><i><u><h1><h2><h3><h4><h5><h6><ul><ol><li><br><hr><table><tr><td><th><thead><tbody><div><span><img>';
+        
+        // Strip all tags except allowed ones
+        $clean = strip_tags($input, $allowed_tags);
+        
+        // Remove all attributes except specific allowed ones
+        $clean = preg_replace_callback('/<([a-z][a-z0-9]*)([^>]*)>/i', function($matches) {
+            $tag = strtolower($matches[1]);
+            $attributes = $matches[2];
+            
+            // Define allowed attributes per tag
+            $allowed_attrs = [];
+            switch ($tag) {
+                case 'a':
+                    $allowed_attrs = ['href', 'title', 'target'];
+                    break;
+                case 'img':
+                    $allowed_attrs = ['src', 'alt', 'title', 'width', 'height'];
+                    break;
+                default:
+                    $allowed_attrs = ['style', 'class'];
+            }
+            
+            // Process attributes
+            $new_attrs = '';
+            if (preg_match_all('/([a-z\-]+)\s*=\s*("[^"]*"|\'[^\']*\')/i', $attributes, $attr_matches)) {
+                foreach ($attr_matches[1] as $i => $attr_name) {
+                    $attr_name_lower = strtolower($attr_name);
+                    if (in_array($attr_name_lower, $allowed_attrs)) {
+                        // Basic XSS protection for attribute values
+                        $attr_value = $attr_matches[2][$i];
+                        if (strpos($attr_value, 'javascript:') !== false) {
+                            continue; // Skip dangerous attributes
+                        }
+                        $new_attrs .= ' ' . $attr_name . '=' . $attr_value;
+                    }
+                }
+            }
+            
+            return '<' . $tag . $new_attrs . '>';
+        }, $clean);
+        
+        // Additional cleaning for unwanted whitespace and line breaks
+        $clean = preg_replace('/(\r\n|\r|\n){2,}/', "\n", $clean); // Replace multiple newlines with single
+        $clean = preg_replace('/<p[^>]*>\s*<\/p>/', '', $clean); // Remove empty paragraphs
+        $clean = preg_replace('/<p[^>]*>(\s|&nbsp;)*<\/p>/', '', $clean); // Remove paragraphs with only whitespace
+        $clean = preg_replace('/\s+/', ' ', $clean); // Replace multiple spaces with single space
+        
+        // Escape for database
+        return mysqli_real_escape_string($con, $clean);
     }
     
     // For regular text fields
@@ -24,10 +75,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         // Validate required fields
         $required_fields = ['It', 'Nt', 'related_post_id', 'pagetitle', 'keyword', 'Author', 'Desc'];
+        $missing_fields = [];
+        
         foreach ($required_fields as $field) {
             if (empty($_POST[$field])) {
-                throw new Exception(ucfirst(str_replace('_', ' ', $field)) . " is a required field");
+                $missing_fields[] = ucfirst(str_replace('_', ' ', $field));
             }
+        }
+        
+        if (!empty($missing_fields)) {
+            throw new Exception("Required fields missing: " . implode(', ', $missing_fields));
         }
 
         // Validate and sanitize post ID
@@ -38,6 +95,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Verify post exists
         $stmt = $con->prepare("SELECT id FROM tblposts WHERE id = ? AND Is_Active = 1");
+        if (!$stmt) {
+            throw new Exception("Database error: " . $con->error);
+        }
+        
         $stmt->bind_param("i", $related_post_id);
         $stmt->execute();
         $stmt->store_result();
@@ -64,15 +125,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 clean_input($_POST[$post_key], $con, $config['html']) : '';
         }
 
-        // Process chart data
+        // Process chart data with validation
         $chart_data = [];
         if (!empty($_POST['itinerary_outline']) && is_array($_POST['itinerary_outline'])) {
             foreach ($_POST['itinerary_outline'] as $index => $outline) {
-                if (!empty(trim($outline))) {
-                    $height = $_POST['height_in_meter'][$index] ?? '';
+                $outline_clean = clean_input($outline, $con);
+                if (!empty($outline_clean)) {
+                    $height = isset($_POST['height_in_meter'][$index]) ? 
+                        clean_input($_POST['height_in_meter'][$index], $con) : '';
+                    
+                    // Basic validation for height (optional)
+                    if (!empty($height) && !is_numeric($height)) {
+                        $height = ''; // Clear invalid height
+                    }
+                    
                     $chart_data[] = [
-                        'outline' => clean_input($outline, $con),
-                        'height' => clean_input($height, $con)
+                        'outline' => $outline_clean,
+                        'height' => $height
                     ];
                 }
             }
@@ -105,6 +174,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             `MetaAuthor`,
             `Description`
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?, ?, ?, ?, ?)");
+
+        if (!$stmt) {
+            throw new Exception("Database error: " . $con->error);
+        }
 
         $stmt->bind_param("ssssssssissss",
             $data['itinerary'],

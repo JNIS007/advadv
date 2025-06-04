@@ -11,14 +11,14 @@ if($_GET['action']=='del' && $_GET['rid'])
 {
 	$id=intval($_GET['rid']);
 	$query=mysqli_query($con,"update tblcategory set Is_Active='0' where id='$id'");
-	$msg="Category deleted ";
+	$_SESSION['msg']="Category deleted ";
 }
 // Code for restore
 if($_GET['resid'])
 {
 	$id=intval($_GET['resid']);
 	$query=mysqli_query($con,"update tblcategory set Is_Active='1' where id='$id'");
-	$msg="Category restored successfully";
+	$_SESSION['msg']="Category restored successfully";
 }
 
 // Code for Forever deletionparmdel
@@ -26,7 +26,7 @@ if($_GET['action']=='parmdel' && $_GET['rid'])
 {
 	$id=intval($_GET['rid']);
 	$query=mysqli_query($con,"delete from  tblcategory  where id='$id'");
-	$delmsg="Category deleted forever";
+	$_SESSION['delmsg']="Category deleted forever";
 }
 
 ?>
@@ -93,23 +93,28 @@ if($_GET['action']=='parmdel' && $_GET['rid'])
                         <!-- end row -->
 
 
-<div class="row">
-<div class="col-sm-6">  
- 
-<?php if($msg){ ?>
-<div class="alert alert-success" role="alert">
-<strong>Well done!</strong> <?php echo htmlentities($msg);?>
-</div>
-<?php } ?>
+                                <div class="row">
+                                <div class="col-sm-6">  
+                                <!---Success Message--->  
+                                <?php if(isset($_SESSION['msg'])){ ?>
+                                <div class="alert alert-success" role="alert">
+                                <strong>Well done!</strong> <?php echo $_SESSION['msg'];?>
+                                </div>
+                                <?php } ?>
 
-<?php if($delmsg){ ?>
-<div class="alert alert-danger" role="alert">
-<strong>Oh snap!</strong> <?php echo htmlentities($delmsg);?></div>
-<?php } ?>
+                                <!---del Message--->
+                                <?php if(isset($_SESSION['delmsg'])){ ?>
+                                <div class="alert alert-danger" role="alert">
+                                <strong>Oh snap!</strong> <?php echo $_SESSION['delmsg'];?></div>
+                                <?php } ?>
 
+                                <?php
+                                unset($_SESSION['msg']);
+                                unset($_SESSION['delmsg']);
+                                ?>
 
-</div>
-                                 
+                                </div>
+                                </div> 
                                  
                                     
 

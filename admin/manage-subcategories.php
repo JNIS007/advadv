@@ -9,20 +9,20 @@ if (strlen($_SESSION['login']) == 0) {
 
     if (isset($_GET['action']) && $_GET['action'] == 'del' && isset($_GET['scid'])) {
         $id = intval($_GET['scid']);
-        mysqli_query($con, "UPDATE tblsubcategory SET Is_Active = '0' WHERE SubCategoryId = '$id'");
-        $msg = "Category deleted ";
+        mysqli_query($con, "UPDATE tblsubcategory SET Is_Active = '0' WHERE id = '$id'");
+        $_SESSION['msg'] = "Category deleted ";
     }
 
     if (isset($_GET['resid'])) {
         $id = intval($_GET['resid']);
-        mysqli_query($con, "UPDATE tblsubcategory SET Is_Active = '1' WHERE SubCategoryId = '$id'");
-        $msg = "Category restored successfully";
+        mysqli_query($con, "UPDATE tblsubcategory SET Is_Active = '1' WHERE id = '$id'");
+        $_SESSION['msg'] = "Category restored successfully";
     }
 
     if (isset($_GET['action']) && $_GET['action'] == 'perdel' && isset($_GET['scid'])) {
         $id = intval($_GET['scid']);
-        mysqli_query($con, "DELETE FROM tblsubcategory WHERE SubCategoryId = '$id'");
-        $delmsg = "Category deleted forever";
+        mysqli_query($con, "DELETE FROM tblsubcategory WHERE id = '$id'");
+        $_SESSION['delmsg'] = "Category deleted forever";
     }
 ?>
 <!DOCTYPE html>
@@ -65,18 +65,22 @@ if (strlen($_SESSION['login']) == 0) {
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <?php if ($msg) { ?>
+                            <?php if (isset($_SESSION['msg'])) { ?>
                                 <div class="alert alert-success" role="alert">
-                                    <strong>Well done!</strong> <?php echo htmlentities($msg); ?>
+                                    <strong>Well done!</strong> <?php echo $_SESSION['msg']; ?>
                                 </div>
                             <?php } ?>
 
-                            <?php if ($delmsg) { ?>
+                            <?php if (isset($_SESSION['delmsg'])) { ?>
                                 <div class="alert alert-danger" role="alert">
-                                    <strong>Oh snap!</strong> <?php echo htmlentities($delmsg); ?>
+                                    <strong>Oh snap!</strong> <?php echo $_SESSION['delmsg']; ?>
                                 </div>
                             <?php } ?>
                         </div>
+                        <?php
+                        unset($_SESSION['msg']);
+                        unset($_SESSION['delmsg']);
+                        ?>
                     </div>
 
                     <div class="row">
@@ -98,14 +102,12 @@ if (strlen($_SESSION['login']) == 0) {
                                                 <th>Category</th>
                                                 <th>Sub Category</th>
                                                 <th>Description</th>
-                                                <th>Posting Date</th>
-                                                <th>Last Update</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $query = mysqli_query($con, "SELECT tblcategory.CategoryName as catname, tblsubcategory.Subcategory as subcatname, tblsubcategory.SubCatDescription as SubCatDescription, tblsubcategory.PostingDate as subcatpostingdate, tblsubcategory.UpdationDate as subcatupdationdate, tblsubcategory.SubCategoryId as subcatid FROM tblsubcategory JOIN tblcategory ON tblsubcategory.CategoryId=tblcategory.id WHERE tblsubcategory.Is_Active=1");
+                                            $query = mysqli_query($con, "SELECT tblcategory.CategoryName as catname, tblsubcategory.Subcategory as subcatname, tblsubcategory.SubCatDescription as SubCatDescription, tblsubcategory.id as subcatid FROM tblsubcategory JOIN tblcategory ON tblsubcategory.CategoryId=tblcategory.id WHERE tblsubcategory.Is_Active=1;");
                                             $cnt = 1;
                                             $rowcount = mysqli_num_rows($query);
                                             if ($rowcount == 0) {
@@ -119,9 +121,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                         <th scope="row"><?php echo htmlentities($cnt); ?></th>
                                                         <td><?php echo htmlentities($row['catname']); ?></td>
                                                         <td><?php echo htmlentities($row['subcatname']); ?></td>
-                                                        <td><?php echo htmlentities($row['SubCatDescription']); ?></td>
-                                                        <td><?php echo htmlentities($row['subcatpostingdate']); ?></td>
-                                                        <td><?php echo htmlentities($row['subcatupdationdate']); ?></td>
+                                                        <td><?php echo $row['SubCatDescription']; ?></td>
                                                         <td>
                                                             <a href="edit-subcategory.php?scid=<?php echo htmlentities($row['subcatid']); ?>">
                                                                 <i class="fa fa-pencil" style="color: #29b6f6;"></i>
@@ -161,14 +161,12 @@ if (strlen($_SESSION['login']) == 0) {
                                                 <th>Category</th>
                                                 <th>Sub Category</th>
                                                 <th>Description</th>
-                                                <th>Posting Date</th>
-                                                <th>Last Update</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $query = mysqli_query($con, "SELECT tblcategory.CategoryName as catname, tblsubcategory.Subcategory as subcatname, tblsubcategory.SubCatDescription as SubCatDescription, tblsubcategory.PostingDate as subcatpostingdate, tblsubcategory.UpdationDate as subcatupdationdate, tblsubcategory.SubCategoryId as subcatid FROM tblsubcategory JOIN tblcategory ON tblsubcategory.CategoryId=tblcategory.id WHERE tblsubcategory.Is_Active=0");
+                                            $query = mysqli_query($con, "SELECT tblcategory.CategoryName as catname, tblsubcategory.Subcategory as subcatname, tblsubcategory.SubCatDescription as SubCatDescription, tblsubcategory.id as subcatid FROM tblsubcategory JOIN tblcategory ON tblsubcategory.CategoryId=tblcategory.id WHERE tblsubcategory.Is_Active=0;");
                                             $cnt = 1;
                                             $rowcount = mysqli_num_rows($query);
                                             if ($rowcount == 0) {
@@ -182,9 +180,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                         <th scope="row"><?php echo htmlentities($cnt); ?></th>
                                                         <td><?php echo htmlentities($row['catname']); ?></td>
                                                         <td><?php echo htmlentities($row['subcatname']); ?></td>
-                                                        <td><?php echo htmlentities($row['SubCatDescription']); ?></td>
-                                                        <td><?php echo htmlentities($row['subcatpostingdate']); ?></td>
-                                                        <td><?php echo htmlentities($row['subcatupdationdate']); ?></td>
+                                                        <td><?php echo $row['SubCatDescription']; ?></td>
                                                         <td>
                                                             <a href="manage-subcategories.php?resid=<?php echo htmlentities($row['subcatid']); ?>">
                                                                 <i class="ion-arrow-return-right" title="Restore"></i>

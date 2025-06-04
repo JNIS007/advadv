@@ -9,8 +9,23 @@ function clean_input($input, $con, $allow_html = false) {
     }
     
     if ($allow_html) {
-        // For CKEditor content, just escape it for database
-        return mysqli_real_escape_string($con, trim($input));
+        // For CKEditor content, normalize and clean unwanted whitespace
+        $clean = $input;
+        
+        // First, decode any HTML entities
+        $clean = html_entity_decode($clean, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        
+        // Replace various line break combinations with a single space
+        $clean = preg_replace('/\s+/', ' ', $clean);
+        
+        // Remove empty paragraphs and fix HTML structure
+        $clean = preg_replace('/<p[^>]*>\s*<\/p>/', '', $clean);
+        $clean = preg_replace('/<p[^>]*>(\s|&nbsp;)*<\/p>/', '', $clean);
+        
+        // Trim the final result
+        $clean = trim($clean);
+        
+        return mysqli_real_escape_string($con, $clean);
     }
     
     // For regular text fields
@@ -38,16 +53,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Invalid ID");
         }
 
-            // Update the post validation to:
-            $stmt = $con->prepare("SELECT id FROM tblposts WHERE id = ?");
-            $stmt->bind_param("i", $related_post_id);
-            $stmt->execute();
-            $stmt->store_result();
+        // Update the post validation to:
+        $stmt = $con->prepare("SELECT id FROM tblposts WHERE id = ?");
+        $stmt->bind_param("i", $related_post_id);
+        $stmt->execute();
+        $stmt->store_result();
 
-            if ($stmt->num_rows === 0) {
-                throw new Exception("Selected post with ID $related_post_id doesn't exist in the system");
-            }
-            $stmt->close();
+        if ($stmt->num_rows === 0) {
+            throw new Exception("Selected post with ID $related_post_id doesn't exist in the system");
+        }
+        $stmt->close();
 
         $stmt = $con->prepare("SELECT id FROM other WHERE id = ? AND is_active = 1");
         $stmt->bind_param("i", $id);

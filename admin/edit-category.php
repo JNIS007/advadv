@@ -15,11 +15,13 @@ $description=$_POST['description'];
 $query=mysqli_query($con,"Update  tblcategory set CategoryName='$category',Description='$description' where id='$catid'");
 if($query)
 {
-$msg="Category Updated successfully ";
+$_SESSION['msg']="Category Updated successfully ";
 }
 else{
-$error="Something went wrong . Please try again.";    
+$_SESSION['error']="Something went wrong . Please try again.";    
 } 
+header("Location:manage-categories.php");
+exit();
 }
 
 
@@ -31,7 +33,13 @@ $error="Something went wrong . Please try again.";
     <head>
 
         <title>Newsportal | Add Category</title>
+        
+        <style>
+        .cke_notifications_area{
+            display: none !important;
 
+    }
+    </style>
         <!-- App css -->
         <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
@@ -93,25 +101,8 @@ $error="Something went wrong . Please try again.";
                                 <div class="card-box">
                                     <h4 class="m-t-0 header-title"><b>Edit Category </b></h4>
                                     <hr />
-                        		
 
-
-<div class="row">
-<div class="col-sm-6">  
-<!---Success Message--->  
-<?php if($msg){ ?>
-<div class="alert alert-success" role="alert">
-<strong>Well done!</strong> <?php echo htmlentities($msg);?>
-</div>
-<?php } ?>
-
-<!---Error Message--->
-<?php if($error){ ?>
-<div class="alert alert-danger" role="alert">
-<strong>Oh snap!</strong> <?php echo htmlentities($error);?></div>
-<?php } ?>
-
-
+                                
 </div>
 </div>
 
@@ -138,7 +129,7 @@ while($row=mysqli_fetch_array($query))
 	                                            <div class="form-group">
 	                                                <label class="col-md-2 control-label">Category Description</label>
 	                                                <div class="col-md-10">
- <textarea class="form-control" rows="5" name="description" required><?php echo htmlentities($row['Description']);?></textarea>
+ <textarea class="form-control" rows="5" name="description" id="editor" required><?php echo htmlentities($row['Description']);?></textarea>
 	                                                </div>
 	                                            </div>
 <?php } ?>
@@ -157,15 +148,6 @@ while($row=mysqli_fetch_array($query))
 
 
                         			</div>
-
-
-                        			
-
-
-
-
-           
-                       
 
 
                                 </div>
@@ -206,6 +188,25 @@ while($row=mysqli_fetch_array($query))
         <!-- App js -->
         <script src="assets/js/jquery.core.js"></script>
         <script src="assets/js/jquery.app.js"></script>
+        <!-- CKEditor -->
+         <script src="https://cdn.ckeditor.com/4.20.2/full/ckeditor.js"></script>
+           <script>
+        CKEDITOR.replace('editor', {
+        toolbar: [
+        { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
+        { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+        { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
+        { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+        { name: 'colors', items: ['TextColor', 'BGColor'] },
+        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
+        { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+        { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
+        { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+         ],
+          height: 300
+         });
+    </script>
+
 
     </body>
 </html>
