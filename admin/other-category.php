@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 if (strlen($_SESSION['login']) == 0) {
   header('location:index.php');
 } else {
-  ?>
+?>
   <!DOCTYPE html>
   <html lang="en">
 
@@ -26,6 +26,7 @@ if (strlen($_SESSION['login']) == 0) {
     <!-- Jquery filer css -->
     <link href="../plugins/jquery.filer/css/jquery.filer.css" rel="stylesheet" />
     <link href="../plugins/jquery.filer/css/themes/jquery.filer-dragdropbox-theme.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@4.0.1/dist/css/multi-select-tag.min.css">
 
     <!-- App css -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
@@ -155,7 +156,7 @@ if (strlen($_SESSION['login']) == 0) {
             <form action="save.php" method="POST" id="postForm">
               <div class="tabs">
                 <div class="tab active" data-tab="ITINERARY">ITINERARY</div>
-                <div class="tab" data-tab="USEFUL_INFORMATION">USEFUL INFORMATION</div>
+                <div class="tab" data-tab="USEFUL_INFORMATION">KEY HIGHLIGHTS</div>
                 <div class="tab" data-tab="WHATS_INCLUDED">WHATS INCLUDED</div>
                 <div class="tab" data-tab="FAQ">FAQ</div>
                 <div class="tab" data-tab="RECOMMENDED_PACKAGE">RECOMMENDED PACKAGE</div>
@@ -168,25 +169,25 @@ if (strlen($_SESSION['login']) == 0) {
                 <div class="card-box">
                   <h4><b>Detailed Itinerary:</b></h4>
                   <textarea class="form-control" id="editor1" name="It" required><?php
-                  echo isset($_SESSION['form_data']['It']) ? htmlspecialchars($_SESSION['form_data']['It']) : '';
-                  ?></textarea>
+                                                                                  echo isset($_SESSION['form_data']['It']) ? htmlspecialchars($_SESSION['form_data']['It']) : '';
+                                                                                  ?></textarea>
                 </div>
                 <div class="card-box">
                   <h4><b>Trip Facts
 
                     </b></h4>
                   <textarea class="form-control" id="editor2" name="Nt" required><?php
-                  echo isset($_SESSION['form_data']['Nt']) ? htmlspecialchars($_SESSION['form_data']['Nt']) : '';
-                  ?></textarea>
+                                                                                  echo isset($_SESSION['form_data']['Nt']) ? htmlspecialchars($_SESSION['form_data']['Nt']) : '';
+                                                                                  ?></textarea>
                 </div>
               </div>
 
               <div class="tab-content" data-tab="USEFUL_INFORMATION" style="display:none;">
                 <div class="card-box">
-                  <h4><b>Useful Information:</b></h4>
+                  <h4><b>Key Highlights:</b></h4>
                   <textarea class="form-control" id="editor3" name="useful_info"><?php
-                  echo isset($_SESSION['form_data']['useful_info']) ? htmlspecialchars($_SESSION['form_data']['useful_info']) : '';
-                  ?></textarea>
+                                                                                  echo isset($_SESSION['form_data']['useful_info']) ? htmlspecialchars($_SESSION['form_data']['useful_info']) : '';
+                                                                                  ?></textarea>
                 </div>
               </div>
 
@@ -194,14 +195,14 @@ if (strlen($_SESSION['login']) == 0) {
                 <div class="card-box">
                   <h4><b>What's Included:</b></h4>
                   <textarea class="form-control" id="editor4" name="whats_included"><?php
-                  echo isset($_SESSION['form_data']['whats_included']) ? htmlspecialchars($_SESSION['form_data']['whats_included']) : '';
-                  ?></textarea>
+                                                                                    echo isset($_SESSION['form_data']['whats_included']) ? htmlspecialchars($_SESSION['form_data']['whats_included']) : '';
+                                                                                    ?></textarea>
                 </div>
                 <div class="card-box">
                   <h4><b>What's Excluded:</b></h4>
                   <textarea class="form-control" id="editor5" name="whats_Excluded"><?php
-                  echo isset($_SESSION['form_data']['whats_Excluded']) ? htmlspecialchars($_SESSION['form_data']['whats_Excluded']) : '';
-                  ?></textarea>
+                                                                                    echo isset($_SESSION['form_data']['whats_Excluded']) ? htmlspecialchars($_SESSION['form_data']['whats_Excluded']) : '';
+                                                                                    ?></textarea>
                 </div>
               </div>
 
@@ -209,26 +210,31 @@ if (strlen($_SESSION['login']) == 0) {
                 <div class="card-box">
                   <h4><b>FAQ:</b></h4>
                   <textarea class="form-control" id="editor6" name="faq"><?php
-                  echo isset($_SESSION['form_data']['faq']) ? htmlspecialchars($_SESSION['form_data']['faq']) : '';
-                  ?></textarea>
+                                                                          echo isset($_SESSION['form_data']['faq']) ? htmlspecialchars($_SESSION['form_data']['faq']) : '';
+                                                                          ?></textarea>
                 </div>
               </div>
 
               <div class="tab-content" data-tab="RECOMMENDED_PACKAGE" style="display:none;">
                 <div class="card-box">
                   <h4><b>Recommended Package:</b></h4>
-                  <textarea class="form-control" id="editor7" name="req"><?php
-                  echo isset($_SESSION['form_data']['req']) ? htmlspecialchars($_SESSION['form_data']['req']) : '';
-                  ?></textarea>
+                  <select class="form-control" name="countries[]" id="countries" multiple size="100">
+                    <?php
+                    $PostsQuery = mysqli_query($con, "SELECT id, PostTitle FROM tblposts WHERE Is_Active = 1;");
+                    while ($PostsRow = mysqli_fetch_assoc($PostsQuery)) {
+                      echo '<option value="' . $PostsRow['id'] . '">' . htmlspecialchars($PostsRow['PostTitle']) . '</option>';
+                    }
+                    ?>
+                  </select>
                 </div>
               </div>
 
-                <div class="tab-content" data-tab="SEO" style="display:none;">
+              <div class="tab-content" data-tab="SEO" style="display:none;">
                 <div class="card-box">
                   <h4><b>SEO:</b></h4>
                   <div class="form-group m-b-20">
                     <label for="exampleInputEmail1">Page Title</label>
-                    <input type="text" class="form-control" id="posttitle" name="pagetitle" placeholder="Enter title" required 
+                    <input type="text" class="form-control" id="posttitle" name="pagetitle" placeholder="Enter title" required
                       value="<?php echo isset($_SESSION['form_data']['pagetitle']) ? htmlspecialchars($_SESSION['form_data']['pagetitle']) : ''; ?>">
                   </div>
                   <div class="form-group m-b-20">
@@ -242,45 +248,44 @@ if (strlen($_SESSION['login']) == 0) {
                       value="<?php echo isset($_SESSION['form_data']['Author']) ? htmlspecialchars($_SESSION['form_data']['Author']) : ''; ?>">
                   </div>
                   <label for="exampleInputEmail1">Meta Description</label>
-                  <textarea class="form-control" id="editor8" name="Desc"><?php 
-                    echo isset($_SESSION['form_data']['Desc']) ? htmlspecialchars($_SESSION['form_data']['Desc']) : ''; 
-                  ?></textarea>
+                  <textarea class="form-control" id="editor8" name="Desc"><?php
+                                                                          echo isset($_SESSION['form_data']['Desc']) ? htmlspecialchars($_SESSION['form_data']['Desc']) : '';
+                                                                          ?></textarea>
                 </div>
-              </div>
               </div>
 
               <div class="tab-content" data-tab="BELONGS" style="display:none;">
-    <div class="card-box">
-        <h4><b>Belongs To:</b></h4>
-        <div class="form-group mb-3">
-            <label for="destination">Destination:</label>
-            <select class="form-control" name="destination" id="destination" required>
-                <option value="">-- Select Destination --</option>
-                <?php
-                $destQuery = mysqli_query($con, "SELECT id, DestName FROM tbldest WHERE Is_Active = 1;");
-                while ($destRow = mysqli_fetch_assoc($destQuery)) {
-                    $selected = (isset($_SESSION['form_data']['destination']) && $_SESSION['form_data']['destination'] == $destRow['id']) ? 'selected' : '';
-                    echo '<option value="' . $destRow['id'] . '" ' . $selected . '>' . htmlspecialchars($destRow['DestName']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-        
-        <div class="form-group mb-3">
-            <label for="category">Category:</label>
-            <select class="form-control" name="category" id="category" required disabled>
-                <option value="">-- Select Destination First --</option>
-            </select>
-        </div>
-        
-        <div class="form-group mb-3">
-            <label for="postTitle">Related Post:</label>
-            <select class="form-control" name="related_post_id" id="postTitle" required disabled>
-                <option value="">-- Select Category First --</option>
-            </select>
-        </div>
-    </div>
-</div>
+                <div class="card-box">
+                  <h4><b>Belongs To:</b></h4>
+                  <div class="mb-3 form-group">
+                    <label for="destination">Destination:</label>
+                    <select class="form-control" name="destination" id="destination" required>
+                      <option value="">-- Select Destination --</option>
+                      <?php
+                      $destQuery = mysqli_query($con, "SELECT id, DestName FROM tbldest WHERE Is_Active = 1;");
+                      while ($destRow = mysqli_fetch_assoc($destQuery)) {
+                        $selected = (isset($_SESSION['form_data']['destination']) && $_SESSION['form_data']['destination'] == $destRow['id']) ? 'selected' : '';
+                        echo '<option value="' . $destRow['id'] . '" ' . $selected . '>' . htmlspecialchars($destRow['DestName']) . '</option>';
+                      }
+                      ?>
+                    </select>
+                  </div>
+
+                  <div class="mb-3 form-group">
+                    <label for="category">Category:</label>
+                    <select class="form-control" name="category" id="category" required disabled>
+                      <option value="">-- Select Destination First --</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3 form-group">
+                    <label for="postTitle">Related Post:</label>
+                    <select class="form-control" name="related_post_id" id="postTitle" required disabled>
+                      <option value="">-- Select Category First --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
               <div class="tab-content" data-tab="CHART" style="display:none;">
                 <div class="card-box">
@@ -288,7 +293,7 @@ if (strlen($_SESSION['login']) == 0) {
                     <?php
                     if (isset($_SESSION['form_data']['itinerary_outline'])) {
                       for ($i = 0; $i < count($_SESSION['form_data']['itinerary_outline']); $i++) {
-                        echo '<div class="row field-group mt-3">';
+                        echo '<div class="mt-3 row field-group">';
                         echo '<div class="col-md-6">';
                         echo '<h4><b>Itinerary Outline:</b></h4>';
                         echo '<input type="text" class="form-control" name="itinerary_outline[]" value="' . htmlspecialchars($_SESSION['form_data']['itinerary_outline'][$i]) . '" />';
@@ -313,7 +318,7 @@ if (strlen($_SESSION['login']) == 0) {
                     }
                     ?>
                   </div>
-                  <button type="button" id="addMoreBtn" class="btn btn-primary mt-3">
+                  <button type="button" id="addMoreBtn" class="mt-3 btn btn-primary">
                     Add Another
                   </button>
                 </div>
@@ -365,7 +370,7 @@ if (strlen($_SESSION['login']) == 0) {
       // Tab switching
       const tabs = document.querySelectorAll('.tab');
       tabs.forEach(tab => {
-        tab.addEventListener('click', function () {
+        tab.addEventListener('click', function() {
           tabs.forEach(t => t.classList.remove('active'));
           this.classList.add('active');
         });
@@ -375,7 +380,7 @@ if (strlen($_SESSION['login']) == 0) {
       const tabContents = document.querySelectorAll('.tab-content');
 
       tabButtons.forEach(tab => {
-        tab.addEventListener('click', function () {
+        tab.addEventListener('click', function() {
           const tabName = this.getAttribute('data-tab');
           tabButtons.forEach(btn => btn.classList.remove('active'));
           this.classList.add('active');
@@ -391,8 +396,9 @@ if (strlen($_SESSION['login']) == 0) {
       });
 
       // Dynamic fields
-      document.getElementById('addMoreBtn').addEventListener('click', function () {
+      document.getElementById('addMoreBtn').addEventListener('click', function() {
         const container = document.getElementById('dynamicFieldsContainer');
+
         const newFieldGroup = document.createElement('div');
         newFieldGroup.className = 'row field-group mt-3';
         newFieldGroup.innerHTML = `
@@ -409,7 +415,7 @@ if (strlen($_SESSION['login']) == 0) {
       });
 
       // Form validation
-      document.getElementById('postForm').addEventListener('submit', function (e) {
+      document.getElementById('postForm').addEventListener('submit', function(e) {
         const requiredFields = document.querySelectorAll('[required]');
         let isValid = true;
 
@@ -429,24 +435,52 @@ if (strlen($_SESSION['login']) == 0) {
       });
 
       // Initialize CKEditor on all textareas
-      jQuery(document).ready(function () {
+      jQuery(document).ready(function() {
         // Initialize Select2
         $(".select2").select2();
-        $(".select2-limiting").select2({ maximumSelectionLength: 2 });
+        $(".select2-limiting").select2({
+          maximumSelectionLength: 2
+        });
 
         // Initialize all CKEditor instances
         for (let i = 1; i <= 8; i++) {
           CKEDITOR.replace('editor' + i, {
-            toolbar: [
-              { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-              { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-              { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-              { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-              { name: 'colors', items: ['TextColor', 'BGColor'] },
-              { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-              { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-              { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-              { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+            toolbar: [{
+                name: 'document',
+                items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates']
+              },
+              {
+                name: 'clipboard',
+                items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo']
+              },
+              {
+                name: 'editing',
+                items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt']
+              },
+              {
+                name: 'styles',
+                items: ['Styles', 'Format', 'Font', 'FontSize']
+              },
+              {
+                name: 'colors',
+                items: ['TextColor', 'BGColor']
+              },
+              {
+                name: 'basicstyles',
+                items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting']
+              },
+              {
+                name: 'paragraph',
+                items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock']
+              },
+              {
+                name: 'insert',
+                items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar']
+              },
+              {
+                name: 'tools',
+                items: ['Maximize', 'ShowBlocks']
+              }
             ],
             height: 300
           });
@@ -454,124 +488,138 @@ if (strlen($_SESSION['login']) == 0) {
       });
 
       // Add this to your existing script section
-document.getElementById('destination').addEventListener('change', function() {
-    const destinationId = this.value;
-    const postSelect = document.getElementById('postTitle');
-    
-    // Clear existing options except the first one
-    while (postSelect.options.length > 1) {
-        postSelect.remove(1);
-    }
-    
-    if (destinationId) {
-        // Fetch posts for the selected destination via AJAX
-        fetch('get_posts.php?destination_id=' + destinationId)
+      document.getElementById('destination').addEventListener('change', function() {
+        const destinationId = this.value;
+        const postSelect = document.getElementById('postTitle');
+
+        // Clear existing options except the first one
+        while (postSelect.options.length > 1) {
+          postSelect.remove(1);
+        }
+
+        if (destinationId) {
+          // Fetch posts for the selected destination via AJAX
+          fetch('get_posts.php?destination_id=' + destinationId)
             .then(response => response.json())
             .then(posts => {
-                posts.forEach(post => {
-                    const option = document.createElement('option');
-                    option.value = post.id;
-                    option.textContent = post.PostTitle;
-                    postSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error:', error));
-    }
-});
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const destinationSelect = document.getElementById('destination');
-    const categorySelect = document.getElementById('category');
-    const postSelect = document.getElementById('postTitle');
-    
-    // For edit mode, load categories when page loads
-    if (destinationSelect.value) {
-        loadCategories(destinationSelect.value);
-    }
-    
-    // Destination change handler
-    destinationSelect.addEventListener('change', function() {
-        if (this.value) {
-            loadCategories(this.value);
-            // Reset posts dropdown
-            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
-            postSelect.disabled = true;
-        } else {
-            categorySelect.innerHTML = '<option value="">-- Select Destination First --</option>';
-            categorySelect.disabled = true;
-            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
-            postSelect.disabled = true;
-        }
-    });
-    
-    // Category change handler
-    categorySelect.addEventListener('change', function() {
-        if (this.value && destinationSelect.value) {
-            loadPosts(destinationSelect.value, this.value);
-        } else {
-            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
-            postSelect.disabled = true;
-        }
-    });
-});
-
-function loadCategories(destinationId) {
-    const categorySelect = document.getElementById('category');
-
-    console.log(destinationId)
-    
-    fetch('get_cat.php?destination_id=' + destinationId)
-        .then(response => response.json())
-        .then(categories => {
-            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.id;
-                option.textContent = category.CategoryName;
-                categorySelect.appendChild(option);
-            });
-            categorySelect.disabled = false;
-            
-            // For edit mode, select the saved category
-            <?php if (isset($data['P_id'])): ?>
-            const savedCategoryId = <?php 
-                $catQuery = mysqli_query($con, "SELECT CategoryId FROM tblposts WHERE id = " . intval($data['P_id']));
-                $catRow = mysqli_fetch_assoc($catQuery);
-                echo $catRow['CategoryId'] ?? 'null';
-            ?>;
-            if (savedCategoryId) {
-                categorySelect.value = savedCategoryId;
-                // Trigger posts load
-                loadPosts(destinationId, savedCategoryId);
-            }
-            <?php endif; ?>
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-function loadPosts(destinationId, categoryId) {
-    const postSelect = document.getElementById('postTitle');
-    
-    fetch('get_posts.php?destination_id=' + destinationId + '&category_id=' + categoryId)
-        .then(response => response.json())
-        .then(posts => {
-            postSelect.innerHTML = '<option value="">-- Select Post --</option>';
-            posts.forEach(post => {
+              posts.forEach(post => {
                 const option = document.createElement('option');
                 option.value = post.id;
                 option.textContent = post.PostTitle;
                 postSelect.appendChild(option);
+              });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+      });
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        const destinationSelect = document.getElementById('destination');
+        const categorySelect = document.getElementById('category');
+        const postSelect = document.getElementById('postTitle');
+
+        // For edit mode, load categories when page loads
+        if (destinationSelect.value) {
+          loadCategories(destinationSelect.value);
+        }
+
+        // Destination change handler
+        destinationSelect.addEventListener('change', function() {
+          if (this.value) {
+            loadCategories(this.value);
+            // Reset posts dropdown
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+          } else {
+            categorySelect.innerHTML = '<option value="">-- Select Destination First --</option>';
+            categorySelect.disabled = true;
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+          }
+        });
+
+        // Category change handler
+        categorySelect.addEventListener('change', function() {
+          if (this.value && destinationSelect.value) {
+            loadPosts(destinationSelect.value, this.value);
+          } else {
+            postSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+            postSelect.disabled = true;
+          }
+        });
+      });
+
+      function loadCategories(destinationId) {
+        const categorySelect = document.getElementById('category');
+
+        console.log(destinationId)
+
+        fetch('get_cat.php?destination_id=' + destinationId)
+          .then(response => response.json())
+          .then(categories => {
+            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+            categories.forEach(category => {
+              const option = document.createElement('option');
+              option.value = category.id;
+              option.textContent = category.CategoryName;
+              categorySelect.appendChild(option);
+            });
+            categorySelect.disabled = false;
+
+            // For edit mode, select the saved category
+            <?php if (isset($data['P_id'])): ?>
+              const savedCategoryId = <?php
+                                      $catQuery = mysqli_query($con, "SELECT CategoryId FROM tblposts WHERE id = " . intval($data['P_id']));
+                                      $catRow = mysqli_fetch_assoc($catQuery);
+                                      echo $catRow['CategoryId'] ?? 'null';
+                                      ?>;
+              if (savedCategoryId) {
+                categorySelect.value = savedCategoryId;
+                // Trigger posts load
+                loadPosts(destinationId, savedCategoryId);
+              }
+            <?php endif; ?>
+          })
+          .catch(error => console.error('Error:', error));
+      }
+
+      function loadPosts(destinationId, categoryId) {
+        const postSelect = document.getElementById('postTitle');
+
+        fetch('get_posts.php?destination_id=' + destinationId + '&category_id=' + categoryId)
+          .then(response => response.json())
+          .then(posts => {
+            postSelect.innerHTML = '<option value="">-- Select Post --</option>';
+            posts.forEach(post => {
+              const option = document.createElement('option');
+              option.value = post.id;
+              option.textContent = post.PostTitle;
+              postSelect.appendChild(option);
             });
             postSelect.disabled = false;
-        })
-        .catch(error => console.error('Error:', error));
-}
+          })
+          .catch(error => console.error('Error:', error));
+      }
     </script>
 
     <!-- App js -->
     <script src="assets/js/jquery.core.js"></script>
     <script src="assets/js/jquery.app.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@4.0.1/dist/js/multi-select-tag.min.js"></script>
+
+    <!-- Then initialize it -->
+    <script>
+      new MultiSelectTag('countries', {
+        maxSelection: 100,
+        required: true,
+        placeholder: 'Search tags',
+
+        onChange: function(selected) {
+          console.log('Selection changed:', selected);
+        }
+      });
+    </script>
 
   </body>
 

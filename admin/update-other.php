@@ -3,31 +3,32 @@ session_start();
 include("./includes/config.php");
 
 // Function to clean text input but preserve HTML from CKEditor
-function clean_input($input, $con, $allow_html = false) {
+function clean_input($input, $con, $allow_html = false)
+{
     if (empty($input)) {
         return '';
     }
-    
+
     if ($allow_html) {
         // For CKEditor content, normalize and clean unwanted whitespace
         $clean = $input;
-        
+
         // First, decode any HTML entities
         $clean = html_entity_decode($clean, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        
+
         // Replace various line break combinations with a single space
         $clean = preg_replace('/\s+/', ' ', $clean);
-        
+
         // Remove empty paragraphs and fix HTML structure
         $clean = preg_replace('/<p[^>]*>\s*<\/p>/', '', $clean);
         $clean = preg_replace('/<p[^>]*>(\s|&nbsp;)*<\/p>/', '', $clean);
-        
+
         // Trim the final result
         $clean = trim($clean);
-        
+
         return mysqli_real_escape_string($con, $clean);
     }
-    
+
     // For regular text fields
     $clean = html_entity_decode($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $clean = strip_tags($clean);
@@ -48,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Validate and sanitize IDs
         $id = (int)$_POST['id'];
         $related_post_id = (int)$_POST['related_post_id'];
-        
+
         if ($id <= 0 || $related_post_id <= 0) {
             throw new Exception("Invalid ID");
         }
@@ -68,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $stmt->store_result();
-        
+
         if ($stmt->num_rows === 0) {
             throw new Exception("Record to update doesn't exist or is inactive");
         }
@@ -87,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $data = [];
         foreach ($fields as $post_key => $config) {
-            $data[$config['field']] = isset($_POST[$post_key]) ? 
+            $data[$config['field']] = isset($_POST[$post_key]) ?
                 clean_input($_POST[$post_key], $con, $config['html']) : '';
         }
 
@@ -113,7 +114,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'Author' => clean_input($_POST['Author'], $con),
             'Desc' => clean_input($_POST['Desc'], $con)
         ];
-
+        if (!empty($_POST['countries'])) {
+            $ids =  json_encode($_POST['countries']);
+        }
         // Use prepared statement for the update
         $stmt = $con->prepare("UPDATE other SET
             Detailed_Itinerary = ?,
@@ -129,10 +132,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             Keywords = ?,
             MetaAuthor = ?,
             `Description` = ?,
-            created_at = NOW()
+            created_at = NOW(),
+            `selectedrecommend`=?
+
             WHERE id = ?");
 
-        $stmt->bind_param("ssssssssissssi",
+        $stmt->bind_param(
+            "ssssssssisssssi",
             $data['itinerary'],
             $data['important_note'],
             $data['useful_info'],
@@ -146,6 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $seo_fields['keyword'],
             $seo_fields['Author'],
             $seo_fields['Desc'],
+            $ids,
             $id
         );
 
@@ -154,9 +161,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             throw new Exception("Database error: " . $stmt->error);
         }
-        
+
         $stmt->close();
-        
     } catch (Exception $e) {
         $_SESSION["error"] = "Error: " . $e->getMessage();
         $_SESSION['form_data'] = $_POST;
@@ -169,4 +175,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: manage-other.php");
     exit();
 }
-?>

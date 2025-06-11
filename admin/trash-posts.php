@@ -6,24 +6,25 @@ if (strlen($_SESSION['login']) == 0) {
     header('location:index.php');
 } else {
 
+
     // Restore Post
     if ($_GET['action'] == 'restore') {
         $postid = intval($_GET['pid']);
         $query = mysqli_query($con, "UPDATE tblposts SET Is_Active = 1 WHERE id = '$postid'");
         if ($query) {
-            $msg = "Post restored successfully ";
+            $_SESSION['msg'] = "Post restored successfully ";
         } else {
-            $error = "Something went wrong. Please try again.";
+            $_SESSION['error'] = "Something went wrong. Please try again.";
         }
     }
 
     // Delete Post Permanently
-    if ($_GET['presid']) {
+    if (isset($_GET['presid'])) {
         $id = intval($_GET['presid']);
         $query = mysqli_query($con, "DELETE FROM tblposts WHERE id = '$id'");
-        $delmsg = "Post deleted forever";
+        $_SESSION['delmsg'] = "Post deleted forever";
     }
-    ?>
+?>
 
     <!DOCTYPE html>
     <html lang="en">
@@ -58,7 +59,7 @@ if (strlen($_SESSION['login']) == 0) {
                             <div class="col-xs-12">
                                 <div class="page-title-box">
                                     <h4 class="page-title">Trashed Posts</h4>
-                                    <ol class="breadcrumb p-0 m-0">
+                                    <ol class="p-0 m-0 breadcrumb">
                                         <li><a href="#">Admin</a></li>
                                         <li><a href="#">Posts</a></li>
                                         <li class="active">Trashed Posts</li>
@@ -68,21 +69,50 @@ if (strlen($_SESSION['login']) == 0) {
                             </div>
                         </div>
 
+                        <!-- Display alerts -->
                         <div class="row">
                             <div class="col-sm-6">
-                                <?php if ($delmsg) { ?>
+                                <?php if (isset($_SESSION['delmsg'])) { ?>
                                     <div class="alert alert-danger" role="alert">
-                                        <strong>Oh snap!</strong> <?php echo htmlentities($delmsg); ?>
+                                        <strong>Oh snap!</strong> <?php echo $_SESSION['delmsg']; ?>
                                     </div>
                                 <?php } ?>
                             </div>
                         </div>
 
                         <div class="row">
+                            <div class="col-sm-6">
+                                <?php if (isset($_SESSION['msg'])) { ?>
+                                    <div class="alert alert-success" role="alert">
+                                        <strong>Hurry!</strong> <?php echo $_SESSION['msg']; ?>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <?php if (isset($_SESSION['error'])) { ?>
+                                    <div class="alert alert-danger" role="alert">
+                                        <strong>Oh snap!</strong> <?php echo $_SESSION['error']; ?>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+
+                        <!-- 🔽 Unset messages after displaying -->
+                        <?php
+                        foreach (['msg', 'error', 'delmsg'] as $key) {
+                            unset($_SESSION[$key]);
+                        }
+                        ?>
+
+
+                        <div class="row">
                             <div class="col-sm-12">
                                 <div class="card-box">
                                     <div class="table-responsive">
-                                        <table class="table table-colored table-centered table-inverse m-0">
+                                        <table class="table m-0 table-colored table-centered table-inverse">
                                             <thead>
                                                 <tr>
                                                     <th>Title</th>
@@ -95,7 +125,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                 $query = mysqli_query($con, "SELECT tblposts.id AS postid, tblposts.PostTitle AS title, tblcategory.CategoryName AS category FROM tblposts LEFT JOIN tblcategory ON tblcategory.id = tblposts.CategoryId WHERE tblposts.Is_Active = 0");
                                                 $rowcount = mysqli_num_rows($query);
                                                 if ($rowcount == 0) {
-                                                    ?>
+                                                ?>
                                                     <tr>
                                                         <td colspan="3" align="center">
                                                             <h3 style="color:red">No record found</h3>
@@ -104,7 +134,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                     <?php
                                                 } else {
                                                     while ($row = mysqli_fetch_array($query)) {
-                                                        ?>
+                                                    ?>
                                                         <tr>
                                                             <td><b><?php echo htmlentities($row['title']); ?></b></td>
                                                             <td><?php echo htmlentities($row['category']); ?></td>
@@ -121,7 +151,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                                 </a>
                                                             </td>
                                                         </tr>
-                                                    <?php }
+                                                <?php }
                                                 } ?>
                                             </tbody>
                                         </table>
@@ -136,7 +166,9 @@ if (strlen($_SESSION['login']) == 0) {
             </div>
         </div>
 
-        <script>var resizefunc = [];</script>
+        <script>
+            var resizefunc = [];
+        </script>
         <script src="assets/js/jquery.min.js"></script>
         <script src="assets/js/bootstrap.min.js"></script>
         <script src="assets/js/detect.js"></script>

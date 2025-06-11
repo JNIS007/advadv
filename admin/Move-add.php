@@ -14,11 +14,11 @@ if (isset($_POST['submit'])) {
     $day = mysqli_real_escape_string($con, trim($_POST['day']));
     $postdetails = mysqli_real_escape_string($con, trim(strip_tags($_POST['postdescription'])));
     $postedby = "admin";
-    
+
     // Generate URL
     $arr = explode(" ", $posttitle);
     $url = mysqli_real_escape_string($con, implode("-", $arr));
-    
+
     // Validate subcategory exists if provided
     if ($subcatid !== NULL) {
         $checkSubcat = mysqli_query($con, "SELECT id FROM tblsubcategory WHERE id = '$subcatid' AND CategoryId = '$catid'");
@@ -28,7 +28,7 @@ if (isset($_POST['submit'])) {
             exit();
         }
     }
-    
+
     // Validate destination exists
     $checkDest = mysqli_query($con, "SELECT id FROM tbldest WHERE id = '$dest'");
     if (mysqli_num_rows($checkDest) == 0) {
@@ -37,33 +37,41 @@ if (isset($_POST['submit'])) {
         exit();
     }
 
-    // Image handling
-    $imgfile = $_FILES["postimage"]["name"];
-    $extension = strtolower(substr($imgfile, strlen($imgfile) - 4, 4));
-    $allowed_extensions = array(".jpg", ".jpeg", ".png", ".gif");
+    // Handle multiple image uploads
+    $imageNames = [];
+    $allowed_extensions = [".jpg", ".jpeg", ".png", ".gif"];
 
-    if (!in_array($extension, $allowed_extensions)) {
-        $_SESSION['error'] = 'Invalid format. Only jpg/jpeg/png/gif format allowed';
-        header("Location: add-post.php");
-        exit();
+    foreach ($_FILES['postimages']['tmp_name'] as $key => $tmp_name) {
+        $imgfile = $_FILES['postimages']['name'][$key];
+        $extension = strtolower(substr($imgfile, strrpos($imgfile, ".")));
+
+        if (!in_array($extension, $allowed_extensions)) {
+            $_SESSION['error'] = 'Invalid format. Only jpg/jpeg/png/gif allowed';
+            header("Location: add-post.php");
+            exit();
+        }
+
+        $imgnewfile = md5(uniqid()) . $extension;
+        $target_path = "postimages/" . $imgnewfile;
+
+        if (move_uploaded_file($_FILES['postimages']['tmp_name'][$key], $target_path)) {
+            $imageNames[] = $imgnewfile;
+        } else {
+            $_SESSION['error'] = 'Error uploading one of the images';
+            header("Location: add-post.php");
+            exit();
+        }
     }
 
-    // Generate unique filename
-    $imgnewfile = md5(uniqid()) . $extension;
-    $target_path = "postimages/" . $imgnewfile;
-
-    if (!move_uploaded_file($_FILES["postimage"]["tmp_name"], $target_path)) {
-        $_SESSION['error'] = 'Error uploading image';
-        header("Location: add-post.php");
-        exit();
-    }
+    // Encode all uploaded image names into JSON
+    $imageJson = json_encode($imageNames);
 
     // Prepare and execute query with proper NULL handling
     $query = "INSERT INTO tblposts(PostTitle, CategoryId, PostDetails, PostUrl, Is_Active, 
-              PostImage, postedBy, Price, Days, DestID, SubCategoryId) 
-              VALUES('$posttitle', '$catid', '$postdetails', '$url', 1, 
-              '$imgnewfile', '$postedby', '$price', '$day', '$dest', " 
-              . ($subcatid === NULL ? "NULL" : "'$subcatid'") . ")";
+    PostImage, postedBy, Price, Days, DestID, SubCategoryId) 
+    VALUES('$posttitle', '$catid', '$postdetails', '$url', 1, 
+    '$imageJson', '$postedby', '$price', '$day', '$dest', "
+        . ($subcatid === NULL ? "NULL" : "'$subcatid'") . ")";
 
     if (mysqli_query($con, $query)) {
         $_SESSION['msg'] = "Post successfully added";
@@ -74,9 +82,8 @@ if (isset($_POST['submit'])) {
             unlink($target_path);
         }
     }
-    
+
     header("Location: add-post.php");
     exit();
 }
 ob_end_flush();
-?>
