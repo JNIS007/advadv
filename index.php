@@ -21,7 +21,7 @@
         $q = mysqli_query($con, "SELECT * FROM tblposts WHERE Is_Active = 1 and selected =1");
         while ($r = mysqli_fetch_array($q)) {
           $ct = $r["CategoryId"];
-        ?>
+          ?>
           <div class="relative swiper-slide">
             <!-- Background Image -->
             <div class="absolute inset-0 bg-center bg-cover"
@@ -57,7 +57,7 @@
                 </div>
 
                 <!-- CTA Button -->
-                <a href="<?php echo URL;?>?id=<?php echo urlencode($r['id']); ?>"
+                <a href="<?php echo URL; ?>?id=<?php echo urlencode($r['id']); ?>"
                   class="inline-block px-8 py-3 mt-8 text-lg font-bold transition delay-300 bg-white rounded-md text-primary hover:bg-gray-100 animate-fadeIn">
                   Explore This Trek
                 </a>
@@ -81,17 +81,17 @@
       <div class="p-8 border border-gray-200 shadow-2xl backdrop-blur-lg bg-white/80 rounded-2xl">
         <h3 class="mb-6 text-3xl font-bold text-center text-gray-900">Find Your Perfect Adventure</h3>
 
-<!-- Search Bar -->
-<div class="mb-6">
-  <div class="flex gap-2">
-    <input type="text" placeholder="Search for a trip..."
-      class="flex-grow p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
-    <button type="submit"
-      class="flex items-center justify-center gap-2 px-6 py-3 text-lg font-semibold text-white transition transform rounded-lg shadow-lg bg-primary hover:bg-blue-700 hover:scale-105">
-      <i class="fas fa-search"></i> Search
-    </button>
-  </div>
-</div>
+        <!-- Search Bar -->
+        <div class="mb-6">
+          <div class="flex gap-2">
+            <input type="text" placeholder="Search for a trip..."
+              class="flex-grow p-3 transition border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary bg-gray-50">
+            <button type="submit"
+              class="flex items-center justify-center gap-2 px-6 py-3 text-lg font-semibold text-white transition transform rounded-lg shadow-lg bg-primary hover:bg-blue-700 hover:scale-105">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
 
         <form class="grid grid-cols-1 gap-6 md:grid-cols-4">
 
@@ -132,7 +132,7 @@
           </div> -->
 
           <!-- Search Button -->
-         
+
 
         </form>
       </div>
@@ -321,7 +321,7 @@
         $query = mysqli_query($con, "SELECT * FROM topposts WHERE Is_Active = 1");
         while ($row = mysqli_fetch_array($query)) {
           $ctid = $row["CategoryId"];
-        ?>
+          ?>
 
           <div class="relative overflow-hidden transition-all duration-300 shadow-lg group rounded-xl hover:shadow-xl">
             <div class="relative h-64 overflow-hidden">
@@ -340,20 +340,20 @@
               <div class="flex items-start justify-between mb-2">
                 <span class="text-sm text-gray-500"><?php echo htmlentities($row['Days']); ?> Days</span>
                 <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full"><?php
-                                                                                                    $q = mysqli_query($con, "SELECT * FROM tblcategory WHERE id =$ctid");
-                                                                                                    $r = mysqli_fetch_array($q);
-                                                                                                    echo $r["CategoryName"];
-                                                                                                    ?></span>
+                $q = mysqli_query($con, "SELECT * FROM tblcategory WHERE id =$ctid");
+                $r = mysqli_fetch_array($q);
+                echo $r["CategoryName"];
+                ?></span>
               </div>
               <h3 class="mb-3 text-xl font-bold text-gray-800 transition group-hover:text-primary">
-                <a href="package/<?php echo htmlentities($row['PostUrl']); ?>">
-                  <?php echo htmlentities($row['PostTitle']); ?>
+
+                <?php echo htmlentities($row['PostTitle']); ?>
                 </a>
               </h3>
               <p class="mb-4 text-gray-600 line-clamp-3">
                 <?php echo htmlentities(substr($row['PostDetails'], 0, 150)); ?>...
               </p>
-              <a href="<?php echo URL;?>?id=<?php echo urlencode($row['id']); ?>"
+              <a href="<?php echo URL; ?>?id=<?php echo urlencode($row['id']); ?>"
                 class="inline-flex items-center font-medium transition text-primary hover:text-blue-800">
                 Explore This Trek <i class="ml-2 fas fa-arrow-right"></i>
               </a>
@@ -623,7 +623,7 @@
         $sql = mysqli_query($con, "SELECT * FROM popularposts WHERE Is_Active = 1");
         while ($ro = mysqli_fetch_array($sql)) {
           $ctid = $ro["CategoryId"];
-        ?>
+          ?>
           <div class="relative overflow-hidden transition-all duration-300 shadow-lg group rounded-xl hover:shadow-xl">
             <div class="relative h-64 overflow-hidden">
               <img src="admin/postimages/<?php echo htmlentities($ro['PostImage']); ?>"
@@ -641,10 +641,10 @@
               <div class="flex items-start justify-between mb-2">
                 <span class="text-sm text-gray-500"><?php echo htmlentities($ro['Days']); ?> Days</span>
                 <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full"><?php
-                                                                                                    $qr = mysqli_query($con, "SELECT * FROM tblcategory WHERE id =$ctid");
-                                                                                                    $rr = mysqli_fetch_array($qr);
-                                                                                                    echo $rr["CategoryName"];
-                                                                                                    ?></span>
+                $qr = mysqli_query($con, "SELECT * FROM tblcategory WHERE id =$ctid");
+                $rr = mysqli_fetch_array($qr);
+                echo $rr["CategoryName"];
+                ?></span>
               </div>
               <h3 class="mb-3 text-xl font-bold text-gray-800 transition group-hover:text-primary">
                 <a href="package/<?php echo htmlentities($ro['PostUrl']); ?>">
@@ -654,7 +654,7 @@
               <p class="mb-4 text-gray-600 line-clamp-3">
                 <?php echo htmlentities(substr($ro['PostDetails'], 0, 150)); ?>...
               </p>
-              <a href="<?php echo URL;?>?id=<?php echo urlencode($ro['id']); ?>"
+              <a href="<?php echo URL; ?>?id=<?php echo urlencode($ro['id']); ?>"
                 class="inline-flex items-center font-medium transition text-primary hover:text-blue-800">
                 Explore This Trek <i class="ml-2 fas fa-arrow-right"></i>
               </a>
@@ -896,7 +896,7 @@
     });
 
     // Reset animations when slide changes (for main swiper)
-    mainSwiper.on('slideChange', function() {
+    mainSwiper.on('slideChange', function () {
       const slides = document.querySelectorAll('.swiper-slide');
       slides.forEach(slide => {
         const animElements = slide.querySelectorAll('[class*="animate-"]');

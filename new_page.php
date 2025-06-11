@@ -16,13 +16,14 @@ if ($id == '') {
 
   if (mysqli_num_rows($result) > 0) {
 
-function cleanText($text) {
-    $patterns = [
-        "/(\r\n)+/",          
-        "/(\\\\r\\\\n)+/"     
-    ];
-    return preg_replace($patterns, '', $text);
-}
+    function cleanText($text)
+    {
+      $patterns = [
+        "/(\r\n)+/",
+        "/(\\\\r\\\\n)+/"
+      ];
+      return preg_replace($patterns, '', $text);
+    }
     $itineraryText = cleanText($roo["Detailed_Itinerary"]);
     $inputString = cleanText($roo["Useful_Information"]);
     $inc = cleanText($roo["Inc"]);
@@ -69,30 +70,31 @@ function cleanText($text) {
       }
     }
 
-function parsePipeSeparatedList($html) {
-  // Remove HTML tags and decode HTML entities
-  $plainText = html_entity_decode(strip_tags($html));
+    function parsePipeSeparatedList($html)
+    {
+      // Remove HTML tags and decode HTML entities
+      $plainText = html_entity_decode(strip_tags($html));
 
-  // Normalize line breaks and slashes
-  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse whitespace
+      // Normalize line breaks and slashes
+      $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+      $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse whitespace
 
-  // Split by pipe and trim each item
-  $items = array_map('trim', explode('|', $plainText));
+      // Split by pipe and trim each item
+      $items = array_map('trim', explode('|', $plainText));
 
-  // Remove empty entries
-  return array_filter($items, fn($item) => !empty($item));
-}
+      // Remove empty entries
+      return array_filter($items, fn($item) => !empty($item));
+    }
 
-// Example usage:
-$it = (parsePipeSeparatedList($inc));                 // inclusions
-$exit = parsePipeSeparatedList($exe);               // exclusions
-$items = parsePipeSeparatedList($inputString);      // general items
-$smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
+    // Example usage:
+    $it = (parsePipeSeparatedList($inc));                 // inclusions
+    $exit = parsePipeSeparatedList($exe);               // exclusions
+    $items = parsePipeSeparatedList($inputString);      // general items
+    $smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
 
 
     // Trim whitespace from each item and create an associative array
-   $result = [];
+    $result = [];
     foreach ($items as $item) {
       $item = trim($item);
       if (!empty($item)) {
@@ -107,27 +109,27 @@ $smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
     }
 
 
-$tripFacts = [];
+    $tripFacts = [];
 
-if (!empty($Important_Note)) {
-  // Decode HTML entities and strip tags
-  $plainText = html_entity_decode(strip_tags($Important_Note));
+    if (!empty($Important_Note)) {
+      // Decode HTML entities and strip tags
+      $plainText = html_entity_decode(strip_tags($Important_Note));
 
-  // Normalize line breaks and whitespace
-  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse spaces
+      // Normalize line breaks and whitespace
+      $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+      $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse spaces
 
-  // Split by pipe
-  $components = explode('|', $plainText);
+      // Split by pipe
+      $components = explode('|', $plainText);
 
-  foreach ($components as $component) {
-    $component = trim($component);
-    if (strpos($component, ':') !== false) {
-      list($key, $value) = explode(':', $component, 2);
-      $tripFacts[trim($key)] = trim($value);
+      foreach ($components as $component) {
+        $component = trim($component);
+        if (strpos($component, ':') !== false) {
+          list($key, $value) = explode(':', $component, 2);
+          $tripFacts[trim($key)] = trim($value);
+        }
+      }
     }
-  }
-}
 
 
 
@@ -147,49 +149,49 @@ if (!empty($Important_Note)) {
 
     // Parse the text into structured days
     // Parse itinerary text with pipe delimiter
-   $days = [];
+    $days = [];
 
-if (!empty($itineraryText)) {
-  // Clean HTML tags and normalize line breaks/delimiters
-  $plainText = strip_tags($itineraryText, '<strong>'); // Keep <strong> for structure
-  $plainText = preg_replace('/<strong>\|<\/strong>|<strong>\|/', '|', $plainText); // Normalize pipe inside <strong>
-  $plainText = preg_replace('/<br\s*\/?>|\r\n|\n/', '|', $plainText); // Normalize line breaks as pipe
-  $plainText = strip_tags($plainText); // Remove remaining tags
+    if (!empty($itineraryText)) {
+      // Clean HTML tags and normalize line breaks/delimiters
+      $plainText = strip_tags($itineraryText, '<strong>'); // Keep <strong> for structure
+      $plainText = preg_replace('/<strong>\|<\/strong>|<strong>\|/', '|', $plainText); // Normalize pipe inside <strong>
+      $plainText = preg_replace('/<br\s*\/?>|\r\n|\n/', '|', $plainText); // Normalize line breaks as pipe
+      $plainText = strip_tags($plainText); // Remove remaining tags
 
-  // Split into individual day entries using lookahead for "Day XX:"
-  $dayEntries = preg_split('/(?=Day \d{1,2}:)/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
+      // Split into individual day entries using lookahead for "Day XX:"
+      $dayEntries = preg_split('/(?=Day \d{1,2}:)/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
 
-  foreach ($dayEntries as $dayEntry) {
-    $components = explode('|', $dayEntry);
+      foreach ($dayEntries as $dayEntry) {
+        $components = explode('|', $dayEntry);
 
-    $day = [
-      'day' => '',
-      'title' => '',
-      'altitude' => '',
-      'meals' => '',
-      'description' => ''
-    ];
+        $day = [
+          'day' => '',
+          'title' => '',
+          'altitude' => '',
+          'meals' => '',
+          'description' => ''
+        ];
 
-    foreach ($components as $component) {
-      $component = trim($component);
+        foreach ($components as $component) {
+          $component = trim($component);
 
-      if (preg_match('/^Day (\d{1,2}):(.+)$/', $component, $dayMatch)) {
-        $day['day'] = trim($dayMatch[1]);
-        $day['title'] = trim($dayMatch[2]);
-      } elseif (preg_match('/^Altitude:(.+)$/i', $component, $altMatch)) {
-        $day['altitude'] = trim($altMatch[1]);
-      } elseif (preg_match('/^Meals:(.+)$/i', $component, $mealsMatch)) {
-        $day['meals'] = trim($mealsMatch[1]);
-      } elseif (preg_match('/^Description:(.+)$/i', $component, $descMatch)) {
-        $day['description'] = trim($descMatch[1]);
+          if (preg_match('/^Day (\d{1,2}):(.+)$/', $component, $dayMatch)) {
+            $day['day'] = trim($dayMatch[1]);
+            $day['title'] = trim($dayMatch[2]);
+          } elseif (preg_match('/^Altitude:(.+)$/i', $component, $altMatch)) {
+            $day['altitude'] = trim($altMatch[1]);
+          } elseif (preg_match('/^Meals:(.+)$/i', $component, $mealsMatch)) {
+            $day['meals'] = trim($mealsMatch[1]);
+          } elseif (preg_match('/^Description:(.+)$/i', $component, $descMatch)) {
+            $day['description'] = trim($descMatch[1]);
+          }
+        }
+
+        if (!empty($day['day']) && !empty($day['title'])) {
+          $days[] = $day;
+        }
       }
     }
-
-    if (!empty($day['day']) && !empty($day['title'])) {
-      $days[] = $day;
-    }
-  }
-}
 
     // Display the formatted output
     // foreach ($days as $day) {
@@ -200,26 +202,26 @@ if (!empty($itineraryText)) {
     //     echo "<p><strong>Description:</strong> {$day['description']}</p>";
     //     echo "</div><br>";
     // }
-$data = 1;
-$qaText = $roo["faq"];
+    $data = 1;
+    $qaText = $roo["faq"];
 
-// Strip HTML tags and decode entities
-$plainText = html_entity_decode(strip_tags($qaText));
+    // Strip HTML tags and decode entities
+    $plainText = html_entity_decode(strip_tags($qaText));
 
-// Normalize slashes, line breaks, and extra spaces
-$plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-$plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse multiple spaces
+    // Normalize slashes, line breaks, and extra spaces
+    $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+    $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse multiple spaces
 
-// Match Q: ... A: ...
-preg_match_all('/Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)/s', $plainText, $matches, PREG_SET_ORDER);
+    // Match Q: ... A: ...
+    preg_match_all('/Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)/s', $plainText, $matches, PREG_SET_ORDER);
 
-$formattedQA = [];
-foreach ($matches as $match) {
-  $formattedQA[] = [
-    'question' => trim($match[1]),
-    'answer' => trim($match[2])
-  ];
-}
+    $formattedQA = [];
+    foreach ($matches as $match) {
+      $formattedQA[] = [
+        'question' => trim($match[1]),
+        'answer' => trim($match[2])
+      ];
+    }
 
 
     // Display the formatted Q&A
@@ -241,8 +243,8 @@ foreach ($matches as $match) {
 
 <head>
 
-<!-- CKEditor -->
-<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+  <!-- CKEditor -->
+  <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -498,7 +500,7 @@ foreach ($matches as $match) {
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <!-- Day Items -->
           <?php foreach ($days as $day) {
-          ?>
+            ?>
             <div class="p-4 transition-shadow rounded-lg shadow-sm bg-white/90 hover:shadow-md">
               <div class="flex items-start gap-3">
                 <div class="bg-[#005FAB] text-white w-8 h-8 rounded-full flex items-center justify-center shrink-0">
@@ -523,7 +525,7 @@ foreach ($matches as $match) {
             <!-- Day 01 -->
             <?php
             foreach ($days as $day) {
-            ?>
+              ?>
               <div class="border border-gray-200 rounded-lg">
                 <button @click="selected !== <?php echo $i; ?> ? selected = <?php echo $i; ?> : selected = null"
                   class="flex items-center justify-between w-full px-4 py-3 font-semibold text-left text-black">
@@ -538,7 +540,7 @@ foreach ($matches as $match) {
                   <p><?php echo $day['description']; ?></p>
                 </div>
               </div>
-            <?php
+              <?php
               $i++;
             } ?>
           </div>
@@ -602,10 +604,10 @@ foreach ($matches as $match) {
                   weight: 'bold'
                 },
                 callbacks: {
-                  title: function(context) {
+                  title: function (context) {
                     return context[0].label;
                   },
-                  label: function(context) {
+                  label: function (context) {
                     const dayDetails = <?php echo json_encode($completeDetails); ?>;
                     return dayDetails[context.dataIndex];
                   }
@@ -673,14 +675,14 @@ foreach ($matches as $match) {
           foreach ($it as $itm) {
             $cleanItem = trim($itm);
 
-          ?>
+            ?>
 
-            <li class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
-              <?php if (!empty($cleanItem)) {
-                echo "<span>{$cleanItem}</span>";
-              } ?>
-            </li>
+          <li class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
+            <?php if (!empty($cleanItem)) {
+              echo "<span>{$cleanItem}</span>";
+            } ?>
+          </li>
           <?php } ?>
         </ul>
       </section>
@@ -692,13 +694,13 @@ foreach ($matches as $match) {
           foreach ($exit as $itmm) {
             $cleanItem = trim($itmm);
 
-          ?>
-            <li class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-              <?php if (!empty($cleanItem)) {
-                echo "<span>{$cleanItem}</span>";
-              } ?>
-            </li>
+            ?>
+          <li class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+            <?php if (!empty($cleanItem)) {
+              echo "<span>{$cleanItem}</span>";
+            } ?>
+          </li>
 
           <?php } ?>
         </ul>
@@ -718,19 +720,23 @@ foreach ($matches as $match) {
 
         <!-- Tabs -->
         <div class="flex mb-6 space-x-2">
-          <button id="tab-group" class="px-4 py-2 font-medium text-white rounded-md tab-button bg-primary">Group Departures</button>
-          <button id="tab-private" class="px-4 py-2 font-medium text-gray-800 bg-gray-200 rounded-md tab-button">Private Trip</button>
+          <button id="tab-group" class="px-4 py-2 font-medium text-white rounded-md tab-button bg-primary">Group
+            Departures</button>
+          <button id="tab-private" class="px-4 py-2 font-medium text-gray-800 bg-gray-200 rounded-md tab-button">Private
+            Trip</button>
         </div>
 
         <!-- Date Filters -->
         <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
           <div>
             <label for="startDate" class="block mb-1 text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+            <input type="date" id="startDate"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
           </div>
           <div>
             <label for="endDate" class="block mb-1 text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+            <input type="date" id="endDate"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
           </div>
         </div>
         <input type="hidden" id="postId" value="<?php echo $id; ?>">
@@ -740,9 +746,12 @@ foreach ($matches as $match) {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Trip Starts</th>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Trip Ends</th>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price Per Person</th>
+                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Trip Starts
+                </th>
+                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Trip Ends
+                </th>
+                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price Per
+                  Person</th>
                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Book Now</th>
               </tr>
@@ -787,13 +796,16 @@ foreach ($matches as $match) {
         <div id="private-departures" class="hidden p-6 mt-6 rounded-lg bg-blue-50">
           <h3 class="mb-2 text-xl font-semibold text-gray-800">Plan a Private Trip</h3>
           <p class="mb-4 text-gray-700">
-            Looking for a private departure with your own group, family, or solo? We can customize this trek based on your
+            Looking for a private departure with your own group, family, or solo? We can customize this trek based on
+            your
             preferred dates, comfort level, and travel style.
           </p>
-          <a href="#inquiry-form" class="inline-block px-6 py-2 font-medium text-white rounded-md bg-primary hover:bg-primary-dark">
+          <a href="#inquiry-form"
+            class="inline-block px-6 py-2 font-medium text-white rounded-md bg-primary hover:bg-primary-dark">
             Inquire About a Private Trip
           </a>
-        </div> <button id="refresh-btn" class="flex items-center px-4 py-2 ml-4 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+        </div> <button id="refresh-btn"
+          class="flex items-center px-4 py-2 ml-4 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
           <i class="mr-2 fas fa-sync-alt"></i> Reset Filters
         </button>
       </section>
@@ -841,12 +853,12 @@ foreach ($matches as $match) {
 
             // Make AJAX request
             fetch('fetch-departures.php', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `start_date=${startDate}&end_date=${endDate}&post_id=${postId}`
-              })
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `start_date=${startDate}&end_date=${endDate}&post_id=${postId}`
+            })
               .then(response => {
                 if (!response.ok) {
                   throw new Error('Network response was not ok');
@@ -932,7 +944,7 @@ foreach ($matches as $match) {
         });
 
         // Refresh button functionality
-        document.getElementById('refresh-btn').addEventListener('click', function() {
+        document.getElementById('refresh-btn').addEventListener('click', function () {
           // Clear the date inputs
           document.getElementById('startDate').value = '';
           document.getElementById('endDate').value = '';
@@ -956,12 +968,12 @@ foreach ($matches as $match) {
 
           // Make AJAX request to get all departures
           fetch('fetch-another.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: `post_id=${postId}&get_all=true`
-            })
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `post_id=${postId}&get_all=true`
+          })
             .then(response => response.json())
             .then(data => {
               updateDepartureTable(data);
@@ -1027,7 +1039,7 @@ foreach ($matches as $match) {
           <!-- Visa Requirements -->
           <?php
           foreach ($formattedQA as $qa) {
-          ?>
+            ?>
             <div class="border border-gray-200 rounded-lg">
               <button @click="open !== <?php echo $data; ?> ? open = <?php echo $data; ?> : open = null"
                 class="flex items-center justify-between w-full px-4 py-3 font-semibold text-left text-gray-800">
@@ -1040,7 +1052,7 @@ foreach ($matches as $match) {
               </div>
             </div>
 
-          <?php
+            <?php
             $data++;
           } ?>
       </section>
@@ -1098,33 +1110,58 @@ foreach ($matches as $match) {
 
       <!-- TripAdvisor Badge -->
       <div
-        class="p-4 mt-6 text-center transition-all duration-300 ease-in-out shadow-lg rounded-xl animate-gradient-bg">
+        class="group bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 hover:bg-white hover:shadow-xl hover:shadow-green-100/20 hover:-translate-y-1 transition-all duration-500 cursor-pointer">
         <a href="https://www.tripadvisor.com/Attraction_Review-g293890-d9984262-Reviews-Advanced_Adventures_Nepal-Kathmandu_Kathmandu_Valley_Bagmati_Zone_Central_Region.html"
-          target="_blank" class="inline-block p-2 transition-colors duration-200 rounded-lg hover:bg-gray-50">
-          <div class="flex items-center justify-center space-x-2 text-[#005FAB]">
-            <div class="flex items-center">
-              <i class="text-2xl transition-all duration-200 fab fa-tripadvisor"></i>
-              <span class="ml-1 text-lg font-bold">TripAdvisor</span>
+          target="_blank" class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div
+              class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200/50">
+              <i class="fab fa-tripadvisor text-white text-xl"></i>
             </div>
-            <div class="flex items-center text-yellow-400">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                class="fas fa-star"></i><i class="fas fa-star"></i>
+            <div>
+              <h3 class="font-bold text-gray-900 text-lg group-hover:text-green-600 transition-colors">TripAdvisor</h3>
+              <div class="flex items-center space-x-1 mt-1">
+                <div class="flex text-amber-400">
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                </div>
+                <span class="text-sm font-medium text-gray-600 ml-2">140 reviews</span>
+              </div>
             </div>
           </div>
-          <p class="mt-1 text-sm text-gray-600">★★★★★ 140 reviews</p>
+          <i class="fas fa-external-link-alt text-gray-400 group-hover:text-green-500 transition-colors"></i>
         </a>
       </div>
 
       <!-- Google Reviews Badge -->
       <div
-        class="p-4 mt-6 text-center transition-all duration-300 ease-in-out shadow-lg rounded-xl animate-gradient-bg">
+        class="group bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 hover:bg-white hover:shadow-xl hover:shadow-blue-100/20 hover:-translate-y-1 transition-all duration-500 cursor-pointer">
         <a href="https://www.google.com/maps/place/Advanced+Adventures" target="_blank"
-          class="inline-block p-2 transition-colors duration-200 rounded-lg hover:bg-gray-50">
-          <div class="flex items-center justify-center space-x-2 text-[#005FAB]">
-            <i class="text-2xl transition-all duration-200 fab fa-google"></i>
-            <span class="ml-1 text-lg font-bold">Google Reviews</span>
+          class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div
+              class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200/50">
+              <i class="fab fa-google text-white text-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Google Reviews
+              </h3>
+              <div class="flex items-center space-x-1 mt-1">
+                <div class="flex text-amber-400">
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                  <i class="fas fa-star text-sm"></i>
+                </div>
+                <span class="text-sm font-medium text-gray-600 ml-2">4.9 rating</span>
+              </div>
+            </div>
           </div>
-          <p class="mt-1 text-sm text-gray-600">★★★★★ 4.9 rating</p>
+          <i class="fas fa-external-link-alt text-gray-400 group-hover:text-blue-500 transition-colors"></i>
         </a>
       </div>
 
@@ -1328,12 +1365,12 @@ foreach ($matches as $match) {
 
       if (startDate && endDate) {
         fetch('fetch-departures.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `start_date=${startDate}&end_date=${endDate}&post_id=${postId}`
-          })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `start_date=${startDate}&end_date=${endDate}&post_id=${postId}`
+        })
           .then(response => response.json())
           .then(data => {
             const tbody = document.getElementById('departure-data');
