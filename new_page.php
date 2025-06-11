@@ -2,6 +2,8 @@
 $i = 1;
 include("./admin/includes/config.php");
 $id = $_GET['id'];
+
+
 if ($id == '') {
   header('location:https://www.dotweb.com.np/advadventure/adv/index.php');
 } else {
@@ -16,22 +18,25 @@ if ($id == '') {
 
   if (mysqli_num_rows($result) > 0) {
 
-function cleanText($text) {
-    $patterns = [
-        "/(\r\n)+/",          
-        "/(\\\\r\\\\n)+/"     
-    ];
-    return preg_replace($patterns, '', $text);
-}
+    function cleanText($text)
+    {
+      $patterns = [
+        "/(\r\n)+/",
+        "/(\\\\r\\\\n)+/"
+      ];
+      return preg_replace($patterns, '', $text);
+    }
     $itineraryText = cleanText($roo["Detailed_Itinerary"]);
     $inputString = cleanText($roo["Useful_Information"]);
     $inc = cleanText($roo["Inc"]);
     $exe = cleanText($roo["Exc"]);
     $altitudeDataJson = cleanText($roo["chart_data"]); // Your JSON string: '[{"outline":"Day 01","height":"1350"},{"outline":"Day 04","height":"1560"}]'
     $Important_Note = cleanText($roo["Important_Note"]);
-    $Recommended_Package = cleanText($roo["Recommended_Package"]);
+    $Recommended_PackageJson = cleanText($roo["selectedrecommend"]);
     // Decode the JSON data
     $altitudeData = json_decode($altitudeDataJson, true);
+    $Recommended_Package = json_decode($Recommended_PackageJson, true);
+
 
     // Prepare arrays for Chart.js
     $labels = [];
@@ -69,30 +74,33 @@ function cleanText($text) {
       }
     }
 
-function parsePipeSeparatedList($html) {
-  // Remove HTML tags and decode HTML entities
-  $plainText = html_entity_decode(strip_tags($html));
 
-  // Normalize line breaks and slashes
-  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse whitespace
 
-  // Split by pipe and trim each item
-  $items = array_map('trim', explode('|', $plainText));
+    function parsePipeSeparatedList($html)
+    {
+      // Remove HTML tags and decode HTML entities
+      $plainText = html_entity_decode(strip_tags($html));
 
-  // Remove empty entries
-  return array_filter($items, fn($item) => !empty($item));
-}
+      // Normalize line breaks and slashes
+      $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+      $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse whitespace
 
-// Example usage:
-$it = (parsePipeSeparatedList($inc));                 // inclusions
-$exit = parsePipeSeparatedList($exe);               // exclusions
-$items = parsePipeSeparatedList($inputString);      // general items
-$smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
+      // Split by pipe and trim each item
+      $items = array_map('trim', explode('|', $plainText));
+
+      // Remove empty entries
+      return array_filter($items, fn($item) => !empty($item));
+    }
+
+    // Example usage:
+    $it = (parsePipeSeparatedList($inc));                 // inclusions
+    $exit = parsePipeSeparatedList($exe);               // exclusions
+    $items = parsePipeSeparatedList($inputString);      // general items
+    // $smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
 
 
     // Trim whitespace from each item and create an associative array
-   $result = [];
+    $result = [];
     foreach ($items as $item) {
       $item = trim($item);
       if (!empty($item)) {
@@ -107,27 +115,27 @@ $smtrek = parsePipeSeparatedList($Recommended_Package); // recommended packages
     }
 
 
-$tripFacts = [];
+    $tripFacts = [];
 
-if (!empty($Important_Note)) {
-  // Decode HTML entities and strip tags
-  $plainText = html_entity_decode(strip_tags($Important_Note));
+    if (!empty($Important_Note)) {
+      // Decode HTML entities and strip tags
+      $plainText = html_entity_decode(strip_tags($Important_Note));
 
-  // Normalize line breaks and whitespace
-  $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-  $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse spaces
+      // Normalize line breaks and whitespace
+      $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+      $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse spaces
 
-  // Split by pipe
-  $components = explode('|', $plainText);
+      // Split by pipe
+      $components = explode('|', $plainText);
 
-  foreach ($components as $component) {
-    $component = trim($component);
-    if (strpos($component, ':') !== false) {
-      list($key, $value) = explode(':', $component, 2);
-      $tripFacts[trim($key)] = trim($value);
+      foreach ($components as $component) {
+        $component = trim($component);
+        if (strpos($component, ':') !== false) {
+          list($key, $value) = explode(':', $component, 2);
+          $tripFacts[trim($key)] = trim($value);
+        }
+      }
     }
-  }
-}
 
 
 
@@ -147,49 +155,49 @@ if (!empty($Important_Note)) {
 
     // Parse the text into structured days
     // Parse itinerary text with pipe delimiter
-   $days = [];
+    $days = [];
 
-if (!empty($itineraryText)) {
-  // Clean HTML tags and normalize line breaks/delimiters
-  $plainText = strip_tags($itineraryText, '<strong>'); // Keep <strong> for structure
-  $plainText = preg_replace('/<strong>\|<\/strong>|<strong>\|/', '|', $plainText); // Normalize pipe inside <strong>
-  $plainText = preg_replace('/<br\s*\/?>|\r\n|\n/', '|', $plainText); // Normalize line breaks as pipe
-  $plainText = strip_tags($plainText); // Remove remaining tags
+    if (!empty($itineraryText)) {
+      // Clean HTML tags and normalize line breaks/delimiters
+      $plainText = strip_tags($itineraryText, '<strong>'); // Keep <strong> for structure
+      $plainText = preg_replace('/<strong>\|<\/strong>|<strong>\|/', '|', $plainText); // Normalize pipe inside <strong>
+      $plainText = preg_replace('/<br\s*\/?>|\r\n|\n/', '|', $plainText); // Normalize line breaks as pipe
+      $plainText = strip_tags($plainText); // Remove remaining tags
 
-  // Split into individual day entries using lookahead for "Day XX:"
-  $dayEntries = preg_split('/(?=Day \d{1,2}:)/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
+      // Split into individual day entries using lookahead for "Day XX:"
+      $dayEntries = preg_split('/(?=Day \d{1,2}:)/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
 
-  foreach ($dayEntries as $dayEntry) {
-    $components = explode('|', $dayEntry);
+      foreach ($dayEntries as $dayEntry) {
+        $components = explode('|', $dayEntry);
 
-    $day = [
-      'day' => '',
-      'title' => '',
-      'altitude' => '',
-      'meals' => '',
-      'description' => ''
-    ];
+        $day = [
+          'day' => '',
+          'title' => '',
+          'altitude' => '',
+          'meals' => '',
+          'description' => ''
+        ];
 
-    foreach ($components as $component) {
-      $component = trim($component);
+        foreach ($components as $component) {
+          $component = trim($component);
 
-      if (preg_match('/^Day (\d{1,2}):(.+)$/', $component, $dayMatch)) {
-        $day['day'] = trim($dayMatch[1]);
-        $day['title'] = trim($dayMatch[2]);
-      } elseif (preg_match('/^Altitude:(.+)$/i', $component, $altMatch)) {
-        $day['altitude'] = trim($altMatch[1]);
-      } elseif (preg_match('/^Meals:(.+)$/i', $component, $mealsMatch)) {
-        $day['meals'] = trim($mealsMatch[1]);
-      } elseif (preg_match('/^Description:(.+)$/i', $component, $descMatch)) {
-        $day['description'] = trim($descMatch[1]);
+          if (preg_match('/^Day (\d{1,2}):(.+)$/', $component, $dayMatch)) {
+            $day['day'] = trim($dayMatch[1]);
+            $day['title'] = trim($dayMatch[2]);
+          } elseif (preg_match('/^Altitude:(.+)$/i', $component, $altMatch)) {
+            $day['altitude'] = trim($altMatch[1]);
+          } elseif (preg_match('/^Meals:(.+)$/i', $component, $mealsMatch)) {
+            $day['meals'] = trim($mealsMatch[1]);
+          } elseif (preg_match('/^Description:(.+)$/i', $component, $descMatch)) {
+            $day['description'] = trim($descMatch[1]);
+          }
+        }
+
+        if (!empty($day['day']) && !empty($day['title'])) {
+          $days[] = $day;
+        }
       }
     }
-
-    if (!empty($day['day']) && !empty($day['title'])) {
-      $days[] = $day;
-    }
-  }
-}
 
     // Display the formatted output
     // foreach ($days as $day) {
@@ -200,26 +208,26 @@ if (!empty($itineraryText)) {
     //     echo "<p><strong>Description:</strong> {$day['description']}</p>";
     //     echo "</div><br>";
     // }
-$data = 1;
-$qaText = $roo["faq"];
+    $data = 1;
+    $qaText = $roo["faq"];
 
-// Strip HTML tags and decode entities
-$plainText = html_entity_decode(strip_tags($qaText));
+    // Strip HTML tags and decode entities
+    $plainText = html_entity_decode(strip_tags($qaText));
 
-// Normalize slashes, line breaks, and extra spaces
-$plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
-$plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse multiple spaces
+    // Normalize slashes, line breaks, and extra spaces
+    $plainText = preg_replace('/\\\\r\\\\n|\r\n|\n|\r/', ' ', $plainText);
+    $plainText = preg_replace('/\s+/', ' ', $plainText); // Collapse multiple spaces
 
-// Match Q: ... A: ...
-preg_match_all('/Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)/s', $plainText, $matches, PREG_SET_ORDER);
+    // Match Q: ... A: ...
+    preg_match_all('/Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)/s', $plainText, $matches, PREG_SET_ORDER);
 
-$formattedQA = [];
-foreach ($matches as $match) {
-  $formattedQA[] = [
-    'question' => trim($match[1]),
-    'answer' => trim($match[2])
-  ];
-}
+    $formattedQA = [];
+    foreach ($matches as $match) {
+      $formattedQA[] = [
+        'question' => trim($match[1]),
+        'answer' => trim($match[2])
+      ];
+    }
 
 
     // Display the formatted Q&A
@@ -235,14 +243,16 @@ foreach ($matches as $match) {
     exit;
   }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 
-<!-- CKEditor -->
-<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+  <!-- CKEditor -->
+  <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -254,7 +264,10 @@ foreach ($matches as $match) {
 
   <!-- External Dependencies -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -396,6 +409,31 @@ foreach ($matches as $match) {
     .transition-transform {
       transition: transform 0.3s ease;
     }
+
+
+    /* Remove background and border */
+    .swiper-button-next,
+    .swiper-button-prev {
+      background: none;
+      border: none;
+      color: #000;
+      /* change to your desired arrow color */
+      width: auto;
+      height: auto;
+    }
+
+    /* Remove default circle by removing pseudo-elements */
+    .swiper-button-next::after,
+    .swiper-button-prev::after {
+      font-size: 24px;
+      /* size of the arrow */
+      font-weight: bold;
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      color: #fff;
+      /* Arrow color */
+    }
   </style>
 </head>
 
@@ -408,10 +446,29 @@ foreach ($matches as $match) {
     <!-- Main Content (3/4 width) -->
     <main class="w-full md:w-3/4">
       <!-- Featured Image -->
-      <div class="mb-8 overflow-hidden shadow-lg rounded-xl">
-        <img src='./admin/postimages/<?php echo $row['PostImage']; ?>' alt="Nepal, Tibet & Bhutan Introduction Tour"
-          class="object-cover w-full h-96">
+      <!-- Swiper Container -->
+      <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+          <?php
+          // Split the images by comma
+          $images = json_decode($row["PostImage"], true);
+          foreach ($images as $image) {
+            echo "
+          <div class='swiper-slide'>
+  <img src='./admin/postimages/$image' style='width:100%; height:400px; object-fit:cover; border-radius:10px;' />
+</div>
+
+        ";
+          }
+          ?>
+        </div>
+
+        <!-- Swiper Navigation (Optional) -->
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-pagination"></div>
       </div>
+
 
       <!-- Breadcrumb -->
       <div class="py-2 text-sm text-gray-600">
@@ -978,6 +1035,24 @@ foreach ($matches as $match) {
             });
         }
       </script>
+      <script>
+        var swiper = new Swiper(".mySwiper", {
+          loop: true,
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev"
+          },
+          pagination: {
+            el: ".swiper-pagination",
+            clickable: true
+          },
+          autoplay: {
+            delay: 2500,
+            disableOnInteraction: false
+          }
+        });
+      </script>
+
 
       <script>
         const tabGroup = document.getElementById('tab-group');
@@ -1009,14 +1084,43 @@ foreach ($matches as $match) {
       <section id="similar-treks" class="p-6 mt-8 shadow-lg bg-blue-50 rounded-xl">
         <h2 class="text-2xl font-bold text-[#005FAB] mb-4">Similar Tours</h2>
         <ul class="space-y-3 text-blue-700 list-disc list-inside">
-          <?php if (!empty($smtrek)): ?>
-            <?php foreach ($smtrek as $tour): ?>
-              <li><?= $tour; ?></li>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <li>No similar tours available.</li>
-          <?php endif; ?>
+          <?php
+          if (!empty($Recommended_Package)) {
+
+            // Sanitize and prepare IDs
+            $ids = array_map('intval', $Recommended_Package);
+            $idList = implode(',', $ids);
+
+
+
+            // Second: Fetch titles to display
+            $select_sql = "SELECT * FROM tblposts WHERE id IN ($idList)";
+            $result = mysqli_query($con, $select_sql);
+
+            if ($result && mysqli_num_rows($result) > 0) {
+
+              while ($rowlatest = mysqli_fetch_assoc($result)) {
+          ?>
+                <li>
+                  <a href="<?php echo URL; ?>?id=<?php echo ($rowlatest['id']); ?>">
+                    <?php echo $rowlatest['PostTitle']; ?>
+                  </a>
+                </li>
+
+
+              <?php
+              }
+              ?>
+          <?php
+            } else {
+              echo "<li>No packages found to display.</li>";
+            }
+          }
+          ?>
         </ul>
+
+
+
       </section>
 
       <section class="p-6 mt-8 shadow-lg bg-blue-50 rounded-xl" id="faqs">

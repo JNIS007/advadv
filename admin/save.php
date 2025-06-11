@@ -3,25 +3,26 @@ session_start();
 include("./includes/config.php");
 
 // Function to clean text input with HTML sanitization for CKEditor
-function clean_input($input, $con, $allow_html = false) {
+function clean_input($input, $con, $allow_html = false)
+{
     if (empty($input)) {
         return '';
     }
-    
+
     $input = trim($input);
-    
+
     if ($allow_html) {
         // Define allowed HTML tags for CKEditor content
         $allowed_tags = '<p><a><strong><em><b><i><u><h1><h2><h3><h4><h5><h6><ul><ol><li><br><hr><table><tr><td><th><thead><tbody><div><span><img>';
-        
+
         // Strip all tags except allowed ones
         $clean = strip_tags($input, $allowed_tags);
-        
+
         // Remove all attributes except specific allowed ones
-        $clean = preg_replace_callback('/<([a-z][a-z0-9]*)([^>]*)>/i', function($matches) {
+        $clean = preg_replace_callback('/<([a-z][a-z0-9]*)([^>]*)>/i', function ($matches) {
             $tag = strtolower($matches[1]);
             $attributes = $matches[2];
-            
+
             // Define allowed attributes per tag
             $allowed_attrs = [];
             switch ($tag) {
@@ -34,7 +35,7 @@ function clean_input($input, $con, $allow_html = false) {
                 default:
                     $allowed_attrs = ['style', 'class'];
             }
-            
+
             // Process attributes
             $new_attrs = '';
             if (preg_match_all('/([a-z\-]+)\s*=\s*("[^"]*"|\'[^\']*\')/i', $attributes, $attr_matches)) {
@@ -50,20 +51,20 @@ function clean_input($input, $con, $allow_html = false) {
                     }
                 }
             }
-            
+
             return '<' . $tag . $new_attrs . '>';
         }, $clean);
-        
+
         // Additional cleaning for unwanted whitespace and line breaks
         $clean = preg_replace('/(\r\n|\r|\n){2,}/', "\n", $clean); // Replace multiple newlines with single
         $clean = preg_replace('/<p[^>]*>\s*<\/p>/', '', $clean); // Remove empty paragraphs
         $clean = preg_replace('/<p[^>]*>(\s|&nbsp;)*<\/p>/', '', $clean); // Remove paragraphs with only whitespace
         $clean = preg_replace('/\s+/', ' ', $clean); // Replace multiple spaces with single space
-        
+
         // Escape for database
         return mysqli_real_escape_string($con, $clean);
     }
-    
+
     // For regular text fields
     $clean = html_entity_decode($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $clean = strip_tags($clean);
@@ -76,13 +77,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Validate required fields
         $required_fields = ['It', 'Nt', 'related_post_id', 'pagetitle', 'keyword', 'Author', 'Desc'];
         $missing_fields = [];
-        
+
         foreach ($required_fields as $field) {
             if (empty($_POST[$field])) {
                 $missing_fields[] = ucfirst(str_replace('_', ' ', $field));
             }
         }
-        
+
         if (!empty($missing_fields)) {
             throw new Exception("Required fields missing: " . implode(', ', $missing_fields));
         }
@@ -98,11 +99,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!$stmt) {
             throw new Exception("Database error: " . $con->error);
         }
-        
+
         $stmt->bind_param("i", $related_post_id);
         $stmt->execute();
         $stmt->store_result();
-        
+
         if ($stmt->num_rows === 0) {
             throw new Exception("Selected post doesn't exist or is inactive");
         }
@@ -121,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $data = [];
         foreach ($fields as $post_key => $config) {
-            $data[$config['field']] = isset($_POST[$post_key]) ? 
+            $data[$config['field']] = isset($_POST[$post_key]) ?
                 clean_input($_POST[$post_key], $con, $config['html']) : '';
         }
 
@@ -131,14 +132,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             foreach ($_POST['itinerary_outline'] as $index => $outline) {
                 $outline_clean = clean_input($outline, $con);
                 if (!empty($outline_clean)) {
-                    $height = isset($_POST['height_in_meter'][$index]) ? 
+                    $height = isset($_POST['height_in_meter'][$index]) ?
                         clean_input($_POST['height_in_meter'][$index], $con) : '';
-                    
+
                     // Basic validation for height (optional)
                     if (!empty($height) && !is_numeric($height)) {
                         $height = ''; // Clear invalid height
                     }
-                    
+
                     $chart_data[] = [
                         'outline' => $outline_clean,
                         'height' => $height
@@ -157,6 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ];
 
         // Insert into database
+        if (!empty($_POST['countries'])) {
+            $ids =  json_encode($_POST['countries']);
+        }
         $stmt = $con->prepare("INSERT INTO other (
             `Detailed_Itinerary`,
             `Important_Note`,
@@ -172,14 +176,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             `PageTitle`,
             `Keywords`,
             `MetaAuthor`,
-            `Description`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?, ?, ?, ?, ?)");
+            `Description`,
+            `selectedrecommend`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?, ?, ?, ?, ?,?)");
 
         if (!$stmt) {
             throw new Exception("Database error: " . $con->error);
         }
 
-        $stmt->bind_param("ssssssssissss",
+        $stmt->bind_param(
+            "ssssssssisssss",
             $data['itinerary'],
             $data['important_note'],
             $data['useful_info'],
@@ -192,7 +198,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $seo_fields['pagetitle'],
             $seo_fields['keyword'],
             $seo_fields['Author'],
-            $seo_fields['Desc']
+            $seo_fields['Desc'],
+            $ids
+
         );
 
         if ($stmt->execute()) {
@@ -201,9 +209,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             throw new Exception("Database error: " . $stmt->error);
         }
-        
+
         $stmt->close();
-        
     } catch (Exception $e) {
         $_SESSION["error"] = "Error: " . $e->getMessage();
         $_SESSION['form_data'] = $_POST;
@@ -212,4 +219,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 }
-?>

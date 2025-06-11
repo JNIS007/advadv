@@ -5,7 +5,7 @@ error_reporting(0);
 if (strlen($_SESSION['login']) == 0) {
     header('location:index.php');
 } else {
-    ?>
+?>
     <!DOCTYPE html>
     <html lang="en">
 
@@ -88,22 +88,22 @@ if (strlen($_SESSION['login']) == 0) {
                             <div class="col-sm-6">
                                 <!---Success Message--->
                                 <?php if (isset($_SESSION['msg'])) { ?>
-                                <div class="alert alert-success" role="alert">
-                                    <strong>Well done!</strong>
-                                    <?php echo htmlentities($_SESSION['msg']); ?>
-                                </div>
-                                <?php 
-                                unset($_SESSION['msg']);
+                                    <div class="alert alert-success" role="alert">
+                                        <strong>Well done!</strong>
+                                        <?php echo htmlentities($_SESSION['msg']); ?>
+                                    </div>
+                                <?php
+                                    unset($_SESSION['msg']);
                                 } ?>
 
                                 <!---Error Message--->
                                 <?php if (isset($_SESSION['error'])) { ?>
-                                <div class="alert alert-danger" role="alert">
-                                    <strong>Oh snap!</strong>
-                                    <?php echo htmlentities($_SESSION['error']); ?>
-                                </div>
-                                <?php 
-                                unset($_SESSION['error']);
+                                    <div class="alert alert-danger" role="alert">
+                                        <strong>Oh snap!</strong>
+                                        <?php echo htmlentities($_SESSION['error']); ?>
+                                    </div>
+                                <?php
+                                    unset($_SESSION['error']);
                                 } ?>
                             </div>
                         </div>
@@ -121,7 +121,7 @@ if (strlen($_SESSION['login']) == 0) {
                                                     <?php
                                                     $ret = mysqli_query($con, "SELECT id, DestName FROM tbldest;");
                                                     while ($result = mysqli_fetch_array($ret)) {
-                                                        ?>
+                                                    ?>
                                                         <option value="<?php echo htmlentities($result['id']); ?>">
                                                             <?php echo htmlentities($result['DestName']); ?>
                                                         </option>
@@ -171,16 +171,42 @@ if (strlen($_SESSION['login']) == 0) {
                                                             required></textarea>
                                                         <script>
                                                             CKEDITOR.replace('editor', {
-                                                                toolbar: [
-                                                                    { name: 'document', items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'] },
-                                                                    { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
-                                                                    { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
-                                                                    { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
-                                                                    { name: 'colors', items: ['TextColor', 'BGColor'] },
-                                                                    { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting'] },
-                                                                    { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-                                                                    { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
-                                                                    { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+                                                                toolbar: [{
+                                                                        name: 'document',
+                                                                        items: ['Source', '-', 'NewPage', 'Preview', '-', 'Templates']
+                                                                    },
+                                                                    {
+                                                                        name: 'clipboard',
+                                                                        items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo']
+                                                                    },
+                                                                    {
+                                                                        name: 'editing',
+                                                                        items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt']
+                                                                    },
+                                                                    {
+                                                                        name: 'styles',
+                                                                        items: ['Styles', 'Format', 'Font', 'FontSize']
+                                                                    },
+                                                                    {
+                                                                        name: 'colors',
+                                                                        items: ['TextColor', 'BGColor']
+                                                                    },
+                                                                    {
+                                                                        name: 'basicstyles',
+                                                                        items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat', 'CopyFormatting']
+                                                                    },
+                                                                    {
+                                                                        name: 'paragraph',
+                                                                        items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock']
+                                                                    },
+                                                                    {
+                                                                        name: 'insert',
+                                                                        items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar']
+                                                                    },
+                                                                    {
+                                                                        name: 'tools',
+                                                                        items: ['Maximize', 'ShowBlocks']
+                                                                    }
                                                                 ],
                                                                 height: 300
                                                             });
@@ -192,9 +218,8 @@ if (strlen($_SESSION['login']) == 0) {
                                             <div class="row">
                                                 <div class="col-sm-12">
                                                     <div class="card-box">
-                                                        <h4 class="m-b-30 m-t-0 header-title"><b>Feature Image</b></h4>
-                                                        <input type="file" class="form-control" id="postimage"
-                                                            name="postimage" required>
+                                                        <h4 class="m-b-30 m-t-0 header-title"><b>Feature Images (Select Multiple Images)</b></h4>
+                                                        <input type="file" class="form-control" id="postimage" name="postimages[]" multiple required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -246,82 +271,87 @@ if (strlen($_SESSION['login']) == 0) {
         <script src="assets/js/jquery.app.js"></script>
 
         <script>
-    jQuery(document).ready(function () {
-        // Initialize Select2
-        $(".select2").select2();
-        $(".select2-limiting").select2({
-            maximumSelectionLength: 2
-        });
+            jQuery(document).ready(function() {
+                // Initialize Select2
+                $(".select2").select2();
+                $(".select2-limiting").select2({
+                    maximumSelectionLength: 2
+                });
 
-        // Destination change handler
-        $('#destination').change(function() {
-            var destId = $(this).val();
-            var categorySelect = $('#category');
-            
-            // Clear existing options except the first one
-            categorySelect.find('option').not(':first').remove();
-            $('#subcategory').prop('disabled', true).find('option').not(':first').remove();
-            
-            if(destId) {
-                // Fetch categories for the selected destination via AJAX
-                $.ajax({
-                    url: 'get_categories.php',
-                    type: 'POST',
-                    data: {dest_id: destId},
-                    dataType: 'json',
-                    success: function(data) {
-                        if(data.length > 0) {
-                            $.each(data, function(key, value) {
-                                categorySelect.append('<option value="'+ value.id +'">'+ value.CategoryName +'</option>');
-                            });
-                        } else {
-                            categorySelect.append('<option value="">No categories found</option>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error: " + status + " - " + error);
+                // Destination change handler
+                $('#destination').change(function() {
+                    var destId = $(this).val();
+                    var categorySelect = $('#category');
+
+                    // Clear existing options except the first one
+                    categorySelect.find('option').not(':first').remove();
+                    $('#subcategory').prop('disabled', true).find('option').not(':first').remove();
+
+                    if (destId) {
+                        // Fetch categories for the selected destination via AJAX
+                        $.ajax({
+                            url: 'get_categories.php',
+                            type: 'POST',
+                            data: {
+                                dest_id: destId
+                            },
+                            dataType: 'json',
+                            success: function(data) {
+                                if (data.length > 0) {
+                                    $.each(data, function(key, value) {
+                                        categorySelect.append('<option value="' + value.id + '">' + value.CategoryName + '</option>');
+                                    });
+                                } else {
+                                    categorySelect.append('<option value="">No categories found</option>');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("AJAX Error: " + status + " - " + error);
+                            }
+                        });
                     }
                 });
-            }
-        });
 
-        // Category change handler
-        $('#category').change(function() {
-            var categoryId = $(this).val();
-            var subcategorySelect = $('#subcategory');
-            
-            // Clear existing options except the first one
-            subcategorySelect.find('option').not(':first').remove();
-            
-            if(categoryId) {
-                // Fetch subcategories for the selected category via AJAX
-                $.ajax({
-                    url: 'get_subcategories.php',
-                    type: 'POST',
-                    data: {category_id: categoryId},
-                    dataType: 'json',
-                    success: function(data) {
-                        if(data.length > 0) {
-                            subcategorySelect.prop('disabled', false);
-                            $.each(data, function(key, value) {
-                                console.log()
-                                subcategorySelect.append('<option value="'+ value.id +'">'+ value.Subcategory+'</option>');
-                            });
-                        } else {
-                            subcategorySelect.prop('disabled', true);
-                            subcategorySelect.append('<option value="">No subcategories available</option>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error: " + status + " - " + error);
+                // Category change handler
+                $('#category').change(function() {
+                    var categoryId = $(this).val();
+                    var subcategorySelect = $('#subcategory');
+
+                    // Clear existing options except the first one
+                    subcategorySelect.find('option').not(':first').remove();
+
+                    if (categoryId) {
+                        // Fetch subcategories for the selected category via AJAX
+                        $.ajax({
+                            url: 'get_subcategories.php',
+                            type: 'POST',
+                            data: {
+                                category_id: categoryId
+                            },
+                            dataType: 'json',
+                            success: function(data) {
+                                if (data.length > 0) {
+                                    subcategorySelect.prop('disabled', false);
+                                    $.each(data, function(key, value) {
+                                        console.log()
+                                        subcategorySelect.append('<option value="' + value.id + '">' + value.Subcategory + '</option>');
+                                    });
+                                } else {
+                                    subcategorySelect.prop('disabled', true);
+                                    subcategorySelect.append('<option value="">No subcategories available</option>');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("AJAX Error: " + status + " - " + error);
+                            }
+                        });
+                    } else {
+                        subcategorySelect.prop('disabled', true);
                     }
                 });
-            } else {
-                subcategorySelect.prop('disabled', true);
-            }
-        });
-    });
-</script>
+            });
+        </script>
     </body>
+
     </html>
 <?php } ?>
